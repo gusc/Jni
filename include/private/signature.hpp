@@ -2,6 +2,7 @@
 #define __GUSC_PRIVATE_SIGNATURE_HPP 1
 
 #include "concat.hpp"
+#include <jni.h>
 
 namespace gusc::Jni::Private
 {
@@ -20,7 +21,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, bool>,
+    std::is_same_v<std::decay_t<T>, jboolean>,
     char_string<2>
 >
 getTypeSignature()
@@ -31,7 +32,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, char>,
+    std::is_same_v<std::decay_t<T>, jchar>,
     char_string<2>
 >
 getTypeSignature()
@@ -42,8 +43,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, std::int8_t> ||
-    std::is_same_v<std::decay_t<T>, std::uint8_t>,
+    std::is_same_v<std::decay_t<T>, jbyte>,
     char_string<2>
 >
 getTypeSignature()
@@ -54,8 +54,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, std::int16_t> ||
-    std::is_same_v<std::decay_t<T>, std::uint16_t>,
+    std::is_same_v<std::decay_t<T>, jshort>,
     char_string<2>
 >
 getTypeSignature()
@@ -66,8 +65,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, std::int32_t> ||
-    std::is_same_v<std::decay_t<T>, std::uint32_t>,
+    std::is_same_v<std::decay_t<T>, jint>,
     char_string<2>
 >
 getTypeSignature()
@@ -78,12 +76,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, std::int64_t> ||
-    std::is_same_v<std::decay_t<T>, std::uint64_t> ||
-    std::is_same_v<std::decay_t<T>, long> ||
-    std::is_same_v<std::decay_t<T>, unsigned long> ||
-    std::is_same_v<std::decay_t<T>, long long> ||
-    std::is_same_v<std::decay_t<T>, unsigned long long>,
+    std::is_same_v<std::decay_t<T>, jlong>,
     char_string<2>
 >
 getTypeSignature()
@@ -94,14 +87,100 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, std::string> ||
-    std::is_same_v<std::decay_t<T>, char*> ||
-    std::is_same_v<std::decay_t<T>, const char*>,
+    std::is_same_v<std::decay_t<T>, jstring>,
     char_string<19>
 >
 getTypeSignature()
 {
     return concat("Ljava/lang/String;");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jbooleanArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[Z");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jcharArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[C");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jbyteArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[B");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jshortArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[S");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jintArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[I");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jlongArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[J");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jfloatArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[F");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<std::decay_t<T>, jdoubleArray>,
+        char_string<19>
+>
+getTypeSignature()
+{
+    return concat("[D");
 }
 
 inline constexpr auto getArgumentSignature()
