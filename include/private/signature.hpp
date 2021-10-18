@@ -110,7 +110,7 @@ inline constexpr auto getArgumentSignature()
 }
 
 template<typename T, typename... TArgs>
-constexpr auto getArgumentSignature(const T&, const TArgs&... args)
+inline constexpr auto getArgumentSignature(const T&, const TArgs&... args)
 {
     return concat(getTypeSignature<T>().str, getArgumentSignature(std::forward<const TArgs&>(args)...).str);
 }

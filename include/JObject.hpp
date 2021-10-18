@@ -48,6 +48,7 @@ public:
         {
             obj = other.obj;
         }
+        return *this;
     }
     JObject(JObject&& other)
     {
@@ -81,6 +82,8 @@ public:
         {
             obj = other.obj;
         }
+        other.obj = nullptr;
+        return *this;
     }
     ~JObject()
     {
@@ -190,7 +193,7 @@ protected:
         std::is_same_v<TReturn, char>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallCharMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }

@@ -26,7 +26,7 @@ public:
     {
         if (string && isCopy == JNI_TRUE)
         {
-            const auto env = JVM::getEnv();
+            auto env = JVM::getEnv();
             env->ReleaseStringUTFChars(string, dataPtr);
         }
     }
@@ -43,7 +43,7 @@ public:
         return dataPtr;
     }
 
-    static jstring createString(const std::string& str)
+    static jstring createFrom(const std::string& str)
     {
         auto env = JVM::getEnv();
         return env->NewStringUTF(str.c_str());
