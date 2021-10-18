@@ -7,8 +7,6 @@
 namesapce gusc::Jni
 {
     
-class JString;
-
 class JClass
 {
 public:
