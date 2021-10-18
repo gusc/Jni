@@ -9,9 +9,10 @@ set(SOURCES
 	
 if(Jni_AutoInit)
     list(APPEND SOURCES "Jni.cpp")
+    add_library(${PROJECT_NAME} STATIC ${SOURCES})
+else()
+    add_library(${PROJECT_NAME} INTERFACE ${SOURCES})
 endif()
-
-add_library(${PROJECT_NAME} INTERFACE ${SOURCES})
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/>
