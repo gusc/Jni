@@ -130,8 +130,8 @@ public:
     {
         constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
         constexpr auto retSign = Private::getTypeSignature<TReturn>();
-        constexpr auto sign = concat("(", argSign.str, ")", retSign.str);
-        invokeMethodSign<TReturn>(name, sign.str, std::forward<TArgs>(args)...);
+        constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
+        invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
     
     template<typename TReturn, typename... TArgs>
@@ -157,8 +157,8 @@ public:
     {
         constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
         constexpr auto retSign = Private::getTypeSignature<TReturn>();
-        constexpr auto sign = concat("(", argSign.str, ")", retSign.str);
-        return invokeMethodSign<TReturn>(name, sign.str, std::forward<TArgs>(args)...);
+        constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
+        return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
 
 protected:

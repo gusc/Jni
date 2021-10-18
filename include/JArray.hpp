@@ -25,10 +25,10 @@ public:
     JArray& operator = (const JArray<TCpp>& other) = delete;
     ~JArray()
     {
-        const auto env = JVM::getEnv();
         if (array && isCopy == JNI_TRUE)
         {
-            freeDataPtr<TJni>();
+            auto env = JVM::getEnv();
+            freeDataPtr<TJni>(env);
         }
     }
     inline operator TCpp()
@@ -39,9 +39,13 @@ public:
         }
         return {};
     }
+    inline TJniEl* data()
+    {
+        return dataPtr;
+    }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jbyteArray>, TJni>
     createFrom(const TCpp& vector)
     {
@@ -52,7 +56,7 @@ public:
     }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, TJni>
     createFrom(const TCpp& vector)
     {
@@ -63,7 +67,7 @@ public:
     }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jintArray>, TJni>
     createFrom(const TCpp& vector)
     {
@@ -74,7 +78,7 @@ public:
     }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jlongArray>, TJni>
     createFrom(const TCpp& vector)
     {
@@ -85,7 +89,7 @@ public:
     }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jfloatArray>, TJni>
     createFrom(const TCpp& vector)
     {
@@ -96,7 +100,7 @@ public:
     }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jdoubleArray>, TJni>
     createFrom(const TCpp& vector)
     {
@@ -107,7 +111,7 @@ public:
     }
 
     template<typename T=TJni>
-    inline
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jbooleanArray>, TJni>
     createFrom(const TCpp& vector)
     {
