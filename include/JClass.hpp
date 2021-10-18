@@ -237,12 +237,13 @@ private:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-            std::is_same_v<TReturn, std::string>,
+            std::is_same_v<TReturn, std::string> ||
+            std::is_same_v<TReturn, JString>,
             TReturn
     >
     invokeMethod(jmethodID methodId, const TArgs&... args)
     {
-        return JString(env, static_cast<jstring>(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...)));
+        return JString(static_cast<jstring>(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...)));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -253,7 +254,7 @@ private:
     >
     invokeMethod(jmethodID methodId, const TArgs&... args)
     {
-        return JObject(env, env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+        return JObject(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...));
     }
 };
 
