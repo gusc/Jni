@@ -12,11 +12,12 @@ template<typename TCpp=std::vector<std::int8_t>, typename TJni=jbyteArray, typen
 class JArray
 {
 public:
-    JArray(JEnv& env, TJni initArray)
+    JArray(TJni initArray)
         : array(initArray)
     {
         if (array)
         {
+            auto env = JVM::getEnv();
             length = env->GetArrayLength(array);
             dataPtr = getDataPtr<TJni>(env);
         }

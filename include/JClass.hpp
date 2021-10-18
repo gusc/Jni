@@ -21,7 +21,7 @@ public:
     inline std::string getClassName()
     {
         jmethodID getNameId = getMethodId("getName", "()Ljava/lang/String;");
-        return JString(env, static_cast<jstring>(env->CallObjectMethod(cls, getNameId)));
+        return JString(static_cast<jstring>(env->CallObjectMethod(cls, getNameId)));
     }
     
     inline jmethodID getStaticMethodId(const char* name, const char* signature)

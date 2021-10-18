@@ -11,11 +11,12 @@ namespace gusc::Jni
 class JString
 {
 public:
-    JString(JEnv& env, const jstring& initString)
+    JString(const jstring& initString)
             : string(initString)
     {
         if (string)
         {
+            auto env = JVM::getEnv();
             length = env->GetStringUTFLength(string);
             dataPtr = env->GetStringUTFChars(string, &isCopy);
         }
