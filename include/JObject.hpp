@@ -100,19 +100,9 @@ public:
         return obj;
     }
     
-    inline jmethodID getMethodId(const char* name, const char* signature)
-    {
-        const auto env = JVM::getEnv();
-        const auto cls = env.getObjectClass(obj);
-        return cls.getMethodId(name, signature);
-    }
+    jmethodID getMethodId(const char* name, const char* signature);
 
-    inline jfieldID getFieldId(const char* name, const char* signature)
-    {
-        auto env = JVM::getEnv();
-        auto cls = env.getObjectClass(obj);
-        return cls.getFieldId(name, signature);
-    }
+    jfieldID getFieldId(const char* name, const char* signature);
     
     template<typename TReturn, typename... TArgs>
     inline
@@ -122,7 +112,7 @@ public:
     >
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
-        const auto env = JVM::getEnv();
+        auto env = JVM::getEnv();
         const auto methodId = getMethodId(name, signature);
         invokeVoidMethod(env, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -135,9 +125,9 @@ public:
     >
     invokeMethod(const char* name, const TArgs&... args)
     {
-        constexpr auto argSign = private::getArgumentSignature(std::forward<const TArgs&>(args)...);
-        constexpr auto retSign = private::getTypeSignature<TReturn>();
-        constexpr auto sign = concat("(", argSign.str, ")", regSign);
+        constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        constexpr auto retSign = Private::getTypeSignature<TReturn>();
+        constexpr auto sign = concat("(", argSign.str, ")", retSign.str);
         invokeMethodSign<TReturn>(name, sign.str, std::forward<TArgs>(args)...);
     }
     
@@ -149,7 +139,7 @@ public:
     >
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
-        const auto env = JVM::getEnv();
+        auto env = JVM::getEnv();
         const auto methodId = getMethodId(name, signature);
         return invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -162,23 +152,23 @@ public:
     >
     invokeMethod(const char* name, const TArgs&... args)
     {
-        constexpr auto argSign = private::getArgumentSignature(std::forward<const TArgs&>(args)...);
-        constexpr auto retSign = private::getTypeSignature<TReturn>();
-        constexpr auto sign = concat("(", argSign.str, ")", regSign);
+        constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        constexpr auto retSign = Private::getTypeSignature<TReturn>();
+        constexpr auto sign = concat("(", argSign.str, ")", retSign.str);
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<TArgs>(args)...);
     }
 
 protected:
     jobject obj { nullptr };
 
-    inline void invokeVoidMethod(const JEnv& env, jmethodID methodId)
+    inline void invokeVoidMethod(JEnv& env, jmethodID methodId)
     {
         env->CallVoidMethod(obj, methodId);
     }
 
     template<typename... TArgs>
     inline
-    void invokeVoidMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    void invokeVoidMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         env->CallVoidMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -189,7 +179,7 @@ protected:
         std::is_same_v<TReturn, bool>,
         TReturn
     >
-    invokeMethodReturn(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallBooleanMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -211,7 +201,7 @@ protected:
         std::is_same_v<TReturn, std::int8_t>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallByteMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -222,7 +212,7 @@ protected:
         std::is_same_v<TReturn, short>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallShortMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -233,7 +223,7 @@ protected:
         std::is_same_v<TReturn, int>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallIntMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -244,7 +234,7 @@ protected:
         std::is_same_v<TReturn, long>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallLongMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -255,7 +245,7 @@ protected:
         std::is_same_v<TReturn, float>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallFloatMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -266,7 +256,7 @@ protected:
         std::is_same_v<TReturn, double>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return static_cast<TReturn>(env->CallDoubleMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -277,7 +267,7 @@ protected:
         std::is_same_v<TReturn, std::string>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return JString(env, static_cast<jstring>(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...)));
     }
@@ -288,7 +278,7 @@ protected:
         std::is_same_v<TReturn, JObject>,
         TReturn
     >
-    invokeMethod(const JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return JObject(env, env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }

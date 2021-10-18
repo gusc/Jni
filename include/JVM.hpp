@@ -7,27 +7,27 @@
 
 #include "JEnv.hpp"
 
-namesapce gusc::Jni
+namespace gusc::Jni
 {
 
 class JVM
 {
 public:
-    static inline void init(JavaVM* jvm) noexcept
+    static inline void init(JavaVM* initVm) noexcept
     {
-        JniJVM = jvm;
+        vm = initVm;
     }
     static inline JEnv getEnv()
     {
-        if (JniJVM)
+        if (vm)
         {
             JNIEnv *env { nullptr };
-            auto res = JniJVM->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
+            auto res = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
             if (res == JNI_OK)
             {
                 return JEnv(env);
             }
-            else if (res == JNI_EDETACHED && JniJVM->AttachCurrentThread(&env, nullptr) == JNI_OK)
+            else if (res == JNI_EDETACHED && vm->AttachCurrentThread(&env, nullptr) == JNI_OK)
             {
                 return JEnv(env);
             }
@@ -35,8 +35,8 @@ public:
         throw std::runtime_error("Java ENV cannot be created!");
     }
 private:
-    inline static JavaVM* JNIEnv { nullptr };
-}
+    inline static JavaVM* vm { nullptr };
+};
     
 }
 

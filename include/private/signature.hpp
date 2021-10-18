@@ -20,7 +20,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, bool>,
+    std::is_same_v<std::decay_t<T>, bool>,
     char_string<2>
 >
 getTypeSignature()
@@ -31,7 +31,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, char>,
+    std::is_same_v<std::decay_t<T>, char>,
     char_string<2>
 >
 getTypeSignature()
@@ -42,8 +42,8 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, std::int8_t> ||
-    std::is_same_v<T, std::uint8_t>,
+    std::is_same_v<std::decay_t<T>, std::int8_t> ||
+    std::is_same_v<std::decay_t<T>, std::uint8_t>,
     char_string<2>
 >
 getTypeSignature()
@@ -54,8 +54,8 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, std::int16_t> ||
-    std::is_same_v<T, std::uint16_t>,
+    std::is_same_v<std::decay_t<T>, std::int16_t> ||
+    std::is_same_v<std::decay_t<T>, std::uint16_t>,
     char_string<2>
 >
 getTypeSignature()
@@ -66,8 +66,8 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, std::int32_t> ||
-    std::is_same_v<T, std::uint32_t>,
+    std::is_same_v<std::decay_t<T>, std::int32_t> ||
+    std::is_same_v<std::decay_t<T>, std::uint32_t>,
     char_string<2>
 >
 getTypeSignature()
@@ -78,12 +78,12 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, std::int64_t> ||
-    std::is_same_v<T, std::uint64_t> ||
-    std::is_same_v<T, long> ||
-    std::is_same_v<T, unsigned long> ||
-    std::is_same_v<T, long long> ||
-    std::is_same_v<T, unsigned long long>,
+    std::is_same_v<std::decay_t<T>, std::int64_t> ||
+    std::is_same_v<std::decay_t<T>, std::uint64_t> ||
+    std::is_same_v<std::decay_t<T>, long> ||
+    std::is_same_v<std::decay_t<T>, unsigned long> ||
+    std::is_same_v<std::decay_t<T>, long long> ||
+    std::is_same_v<std::decay_t<T>, unsigned long long>,
     char_string<2>
 >
 getTypeSignature()
@@ -94,7 +94,7 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, std::string> ||
+    std::is_same_v<std::decay_t<T>, std::string> ||
     std::is_same_v<std::decay_t<T>, char*> ||
     std::is_same_v<std::decay_t<T>, const char*>,
     char_string<19>

@@ -2,11 +2,16 @@
 #define __GUSC_JCLASS_HPP 1
 
 #include <jni.h>
+#include "JEnv.hpp"
+#include "JObject.hpp"
 #include "JString.hpp"
+#include "private/signature.hpp"
 
-namesapce gusc::Jni
+namespace gusc::Jni
 {
-    
+
+class JObject;
+
 class JClass
 {
 public:
@@ -17,7 +22,21 @@ public:
     inline std::string getClassName()
     {
         jmethodID getNameId = getMethodId("getName", "()Ljava/lang/String;");
-        return JString(env, env->CallObjectMethod(cls, mid_getName));
+        return JString(env, static_cast<jstring>(env->CallObjectMethod(cls, getNameId)));
+    }
+
+    template<typename... TArgs>
+    JObject createObjectSign(const char* signature, const TArgs&... args)
+    {
+        const auto methodId = getMethodId("<init>", signature);
+        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename... TArgs>
+    JObject createObject(const TArgs&... args)
+    {
+        constexpr auto sign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
     
     inline jmethodID getStaticMethodId(const char* name, const char* signature)
@@ -63,8 +82,42 @@ public:
 private:
     JEnv& env;
     jclass cls { nullptr };
+};
+
+inline JClass JEnv::getClass(const char* classPath)
+{
+    auto cls = env->FindClass(classPath);
+    if (!cls)
+    {
+        throw std::runtime_error(std::string("Can't find ") + classPath + " Java class");
+    }
+    return JClass(*this, cls);
 }
-    
+
+inline JClass JEnv::getObjectClass(jobject jniObject)
+{
+    auto cls = env->GetObjectClass(jniObject);
+    if (!cls)
+    {
+        throw std::runtime_error("Class not found");
+    }
+    return JClass(*this, cls);
+}
+
+inline jmethodID JObject::getMethodId(const char* name, const char* signature)
+{
+    auto env = JVM::getEnv();
+    auto cls = env.getObjectClass(obj);
+    return cls.getMethodId(name, signature);
+}
+
+inline jfieldID JObject::getFieldId(const char* name, const char* signature)
+{
+    auto env = JVM::getEnv();
+    auto cls = env.getObjectClass(obj);
+    return cls.getFieldId(name, signature);
+}
+
 }
 
 #endif // __GUSC_JCLASS_HPP

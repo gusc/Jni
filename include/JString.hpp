@@ -11,7 +11,7 @@ namespace gusc::Jni
 class JString
 {
 public:
-    JString(JEnv& initEnv, const jstring& initString)
+    JString(JEnv& env, const jstring& initString)
             : string(initString)
     {
         if (string)
@@ -42,6 +42,13 @@ public:
     {
         return dataPtr;
     }
+
+    static jstring createString(const std::string& str)
+    {
+        auto env = JVM::getEnv();
+        return env->NewStringUTF(str.c_str());
+    }
+
 private:
     jboolean isCopy { JNI_FALSE };
     std::size_t length { 0 };
