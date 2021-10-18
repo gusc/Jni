@@ -1,0 +1,2 @@
+# Jni
+JNI helper library
