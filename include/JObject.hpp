@@ -11,7 +11,7 @@
 namespace gusc::Jni
 {
 
-class JObject
+class JObject final
 {
 public:
     JObject(const jobject& initObject) :
@@ -98,7 +98,7 @@ public:
         }
     }
     
-    virtual inline operator jobject() const
+    inline operator jobject() const
     {
         return obj;
     }

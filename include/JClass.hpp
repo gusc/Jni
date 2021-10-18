@@ -5,14 +5,13 @@
 #include "JEnv.hpp"
 #include "JObject.hpp"
 #include "JString.hpp"
+#include "private/concat.hpp"
 #include "private/signature.hpp"
 
 namespace gusc::Jni
 {
 
-class JObject;
-
-class JClass
+class JClass final
 {
 public:
     JClass(JEnv& initEnv, jclass initClass) :
@@ -23,20 +22,6 @@ public:
     {
         jmethodID getNameId = getMethodId("getName", "()Ljava/lang/String;");
         return JString(env, static_cast<jstring>(env->CallObjectMethod(cls, getNameId)));
-    }
-
-    template<typename... TArgs>
-    JObject createObjectSign(const char* signature, const TArgs&... args)
-    {
-        const auto methodId = getMethodId("<init>", signature);
-        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...));
-    }
-
-    template<typename... TArgs>
-    JObject createObject(const TArgs&... args)
-    {
-        constexpr auto sign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
-        return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
     
     inline jmethodID getStaticMethodId(const char* name, const char* signature)
@@ -78,10 +63,198 @@ public:
         }
         return fieldId;
     }
+
+    template<typename... TArgs>
+    JObject createObjectSign(const char* signature, const TArgs&... args)
+    {
+        const auto methodId = getMethodId("<init>", signature);
+        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename... TArgs>
+    JObject createObject(const TArgs&... args)
+    {
+        constexpr auto sign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, void>,
+            void
+    >
+    invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
+    {
+        const auto methodId = getMethodId(name, signature);
+        invokeVoidMethod(methodId, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, void>,
+            void
+    >
+    invokeMethod(const char* name, const TArgs&... args)
+    {
+        constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        constexpr auto retSign = Private::getTypeSignature<TReturn>();
+        constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
+        invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            !std::is_same_v<TReturn, void>,
+            TReturn
+    >
+    invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
+    {
+        const auto methodId = getMethodId(name, signature);
+        return invokeMethodReturn<TReturn>(methodId, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            !std::is_same_v<TReturn, void>,
+            TReturn
+    >
+    invokeMethod(const char* name, const TArgs&... args)
+    {
+        constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        constexpr auto retSign = Private::getTypeSignature<TReturn>();
+        constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
+        return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
+    }
     
 private:
     JEnv& env;
     jclass cls { nullptr };
+
+    inline void invokeVoidMethod(jmethodID methodId)
+    {
+        env->CallStaticVoidMethod(cls, methodId);
+    }
+
+    template<typename... TArgs>
+    inline
+    void invokeVoidMethod(jmethodID methodId, const TArgs&... args)
+    {
+        env->CallStaticVoidMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, bool>,
+            TReturn
+    >
+    invokeMethodReturn(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticBooleanMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, char>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticCharMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, std::int8_t>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticByteMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, short>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticShortMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, int>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticIntMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, long>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticLongMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, float>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticFloatMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, double>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<TReturn>(env->CallStaticDoubleMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, std::string>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return JString(env, static_cast<jstring>(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...)));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<TReturn, JObject>,
+            TReturn
+    >
+    invokeMethod(jmethodID methodId, const TArgs&... args)
+    {
+        return JObject(env, env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+    }
 };
 
 inline JClass JEnv::getClass(const char* classPath)
