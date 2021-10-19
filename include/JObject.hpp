@@ -85,10 +85,19 @@ public:
     }
 
     jmethodID getMethodId(JEnv& env, const char* name, const char* signature);
-
+    inline jmethodID getMethodId(const char* name, const char* signature)
+    {
+        auto env = JVM::getEnv();
+        return getMethodId(env, name, signature);
+    }
     jfieldID getFieldId(JEnv& env, const char* name, const char* signature);
-
+    inline jfieldID getFieldId(const char* name, const char* signature)
+    {
+        auto env = JVM::getEnv();
+        return getFieldId(env, name, signature);
+    }
     JClass getClass(JEnv& env);
+    JClass getClass();
 
     template<typename TReturn, typename... TArgs>
     inline

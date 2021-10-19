@@ -537,6 +537,12 @@ inline JClass JObject::getClass(JEnv& env)
     return env.getObjectClass(obj);
 }
 
+inline JClass JObject::getClass()
+{
+    auto env = JVM::getEnv();
+    return getClass(env);
+}
+
 }
 
 #endif // __GUSC_JCLASS_HPP
