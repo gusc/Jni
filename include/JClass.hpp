@@ -89,6 +89,26 @@ public:
         return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
 
+    template<typename... TArgs>
+    JObject createGlobalObjectJni(jmethodID methodId, const TArgs&... args)
+    {
+        return JObject(jniEnv->NewGlobalRef(jniEnv->NewObject(cls, methodId, std::forward<const TArgs&>(args)...)));
+    }
+
+    template<typename... TArgs>
+    JObject createGlobalObjectSign(const char* signature, const TArgs&... args)
+    {
+        const auto methodId = getMethodId("<init>", signature);
+        return createGlobalObjectJni(methodId, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename... TArgs>
+    JObject createGlobalObject(const TArgs&... args)
+    {
+        constexpr auto sign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        return createGlobalObjectSign(sign.str, std::forward<const TArgs&>(args)...);
+    }
+
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<

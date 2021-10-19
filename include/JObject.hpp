@@ -16,8 +16,17 @@ class JClass;
 class JObject final
 {
 public:
+    struct JGlobal {};
+    struct JWeak {};
+
     JObject(const jobject& initObject) :
         obj(initObject)
+    {}
+    JObject(const jobject& initObject, JGlobal) :
+            obj(JVM::getEnv()->NewGlobalRef(initObject))
+    {}
+    JObject(const jobject& initObject, JWeak) :
+            obj(JVM::getEnv()->NewWeakGlobalRef(initObject))
     {}
     JObject(const JObject& other) = delete;
     JObject& operator=(const JObject& other) = delete;
