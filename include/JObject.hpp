@@ -82,10 +82,6 @@ public:
         return obj;
     }
     
-    jmethodID getMethodId(const char* name, const char* signature);
-
-    jfieldID getFieldId(const char* name, const char* signature);
-    
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
@@ -95,7 +91,7 @@ public:
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
         auto env = JVM::getEnv();
-        const auto methodId = getMethodId(name, signature);
+        const auto methodId = getMethodId(env, name, signature);
         invokeVoidMethod(env, methodId, std::forward<const TArgs&>(args)...);
     }
     
@@ -122,7 +118,7 @@ public:
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
         auto env = JVM::getEnv();
-        const auto methodId = getMethodId(name, signature);
+        const auto methodId = getMethodId(env, name, signature);
         return invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
     
@@ -140,8 +136,42 @@ public:
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
 
+    template<typename T>
+    T getFieldSign(const char* name, const char* signature)
+    {
+        auto env = JVM::getEnv();
+        const auto fieldId = getFieldId(env, name, signature);
+        return getFieldValue<T>(env, fieldId);
+    }
+
+    template<typename T>
+    T getField(const char* name)
+    {
+        constexpr auto sign = Private::getTypeSignature<T>();
+        return getFieldSign<T>(name, sign.str);
+    }
+
+    template<typename T>
+    T setFieldSign(const char* name, const char* signature, const T& value)
+    {
+        auto env = JVM::getEnv();
+        const auto fieldId = getFieldId(env, name, signature);
+        return setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
+    }
+
+    template<typename T>
+    T setField(const char* name, const T& value)
+    {
+        constexpr auto sign = Private::getTypeSignature<T>();
+        return setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
+    }
+
 protected:
     jobject obj { nullptr };
+
+    jmethodID getMethodId(JEnv& env, const char* name, const char* signature);
+
+    jfieldID getFieldId(JEnv& env, const char* name, const char* signature);
 
     inline void invokeVoidMethod(JEnv& env, jmethodID methodId)
     {
@@ -264,6 +294,182 @@ protected:
     invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return JObject(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, bool>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetBooleanField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, char>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetCharField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, std::int8_t>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetByteField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, short>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetShortField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, int>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetIntField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, long>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetLongField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, float>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetFloatField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, double>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<T>(env->GetDoubleField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, bool>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetBooleanField(obj, fieldId, static_cast<jboolean>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, char>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetCharField(obj, fieldId, static_cast<jchar>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, std::int8_t>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetByteField(obj, fieldId, static_cast<jbyte>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, short>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetShortField(obj, fieldId, static_cast<jshort>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, int>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetIntField(obj, fieldId, static_cast<jint>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, long>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetLongField(obj, fieldId, static_cast<jlong>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, float>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetFloatField(obj, fieldId, static_cast<jfloat>(value)));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, double>,
+        T
+    >
+    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return static_cast<T>(env->SetDoubleField(obj, fieldId, static_cast<jdouble>(value)));
     }
 };
 
