@@ -385,91 +385,83 @@ protected:
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, bool>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, bool>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetBooleanField(obj, fieldId, static_cast<jboolean>(value)));
+        env->SetBooleanField(obj, fieldId, static_cast<jboolean>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, char>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, char>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetCharField(obj, fieldId, static_cast<jchar>(value)));
+        env->SetCharField(obj, fieldId, static_cast<jchar>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, std::int8_t>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, std::int8_t>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetByteField(obj, fieldId, static_cast<jbyte>(value)));
+        env->SetByteField(obj, fieldId, static_cast<jbyte>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, short>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, short>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetShortField(obj, fieldId, static_cast<jshort>(value)));
+        env->SetShortField(obj, fieldId, static_cast<jshort>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, int>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, int>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetIntField(obj, fieldId, static_cast<jint>(value)));
+        env->SetIntField(obj, fieldId, static_cast<jint>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, long>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, long>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetLongField(obj, fieldId, static_cast<jlong>(value)));
+        env->SetLongField(obj, fieldId, static_cast<jlong>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, float>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, float>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetFloatField(obj, fieldId, static_cast<jfloat>(value)));
+        env->SetFloatField(obj, fieldId, static_cast<jfloat>(value));
     }
 
     template<typename T>
-    inline
-    typename std::enable_if_t<
-        std::is_same_v<T, double>,
-        T
-    >
-    setFieldValue(JEnv& env, jfieldID fieldId, const T& value)
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, double>,
+                                  const T&
+                              > value)
     {
-        return static_cast<T>(env->SetDoubleField(obj, fieldId, static_cast<jdouble>(value)));
+        env->SetDoubleField(obj, fieldId, static_cast<jdouble>(value));
     }
 };
 
