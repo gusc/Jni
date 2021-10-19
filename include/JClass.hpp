@@ -17,6 +17,11 @@ public:
     JClass(JEnv& initEnv, jclass initClass) :
         env(initEnv),
         cls(initClass){}
+
+    ~JClass()
+    {
+        env->DeleteLocalRef(cls);
+    }
     
     inline std::string getClassName()
     {
