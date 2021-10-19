@@ -17,7 +17,12 @@ public:
     JClass getClass(const char* classPath);
 
     JClass getObjectClass(jobject jniObject);
-    
+
+    inline operator JNIEnv*()
+    {
+        return env;
+    }
+
     inline JNIEnv* operator->()
     {
         return env;

@@ -70,16 +70,16 @@ public:
     }
 
     template<typename... TArgs>
-    JObject createObjectJni(jmethodID methodId, const TArgs&... args)
+    JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JObject(jniEnv->NewObject(cls, methodId, std::forward<const TArgs&>(args)...));
+        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename... TArgs>
     JObject createObjectSign(const char* signature, const TArgs&... args)
     {
         const auto methodId = getMethodId("<init>", signature);
-        return createObjectJni(methodId, std::forward<const TArgs&>(args)...);
+        return createObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename... TArgs>
@@ -90,16 +90,16 @@ public:
     }
 
     template<typename... TArgs>
-    JObject createGlobalObjectJni(jmethodID methodId, const TArgs&... args)
+    JObject createGlobalObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JObject(jniEnv->NewGlobalRef(jniEnv->NewObject(cls, methodId, std::forward<const TArgs&>(args)...)));
+        return JObject(env->NewGlobalRef(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...)));
     }
 
     template<typename... TArgs>
     JObject createGlobalObjectSign(const char* signature, const TArgs&... args)
     {
         const auto methodId = getMethodId("<init>", signature);
-        return createGlobalObjectJni(methodId, std::forward<const TArgs&>(args)...);
+        return createGlobalObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename... TArgs>
