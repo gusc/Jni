@@ -12,16 +12,17 @@ template<typename TCpp=std::vector<std::int8_t>, typename TJni=jbyteArray, typen
 class JArray
 {
 public:
-    JArray(TJni initArray)
+    JArray(JEnv env, TJni initArray)
         : array(initArray)
     {
         if (array)
         {
-            auto env = JVM::getEnv();
             length = env->GetArrayLength(array);
             dataPtr = getDataPtr<TJni>(env);
         }
     }
+    JArray(TJni initArray) : JArray(JVM::getEnv(), initArray)
+    {}
     JArray(const JArray<TCpp>& other) = delete;
     JArray& operator = (const JArray<TCpp>& other) = delete;
     ~JArray()
@@ -48,9 +49,8 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jbyteArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewByteArray(vector.size());
         env->SetByteArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
@@ -59,9 +59,8 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewShortArray(vector.size());
         env->SetShortArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
@@ -70,9 +69,8 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jintArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewIntArray(vector.size());
         env->SetIntArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
@@ -81,9 +79,8 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jlongArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewLongArray(vector.size());
         env->SetLongArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
@@ -92,9 +89,8 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jfloatArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewFloatArray(vector.size());
         env->SetFloatArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
@@ -103,9 +99,8 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jdoubleArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewDoubleArray(vector.size());
         env->SetDoubleArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
@@ -114,12 +109,17 @@ public:
     template<typename T=TJni>
     static inline
     typename std::enable_if_t<std::is_same_v<T, jbooleanArray>, TJni>
-    createFrom(const TCpp& vector)
+    createFrom(JEnv env, const TCpp& vector)
     {
-        auto env = JVM::getEnv();
         TJni a = env->NewBooleanArray(vector.size());
         env->SetBooleanArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
+    }
+
+    template<typename T=TJni>
+    static inline auto createFrom(const TCpp& vector)
+    {
+        return createFrom(JVM::getEnv(), vector);
     }
 
 private:
