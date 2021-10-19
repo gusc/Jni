@@ -11,6 +11,8 @@
 namespace gusc::Jni
 {
 
+class JClass;
+
 class JObject final
 {
 public:
@@ -81,7 +83,24 @@ public:
     {
         return obj;
     }
-    
+
+    jmethodID getMethodId(JEnv& env, const char* name, const char* signature);
+
+    jfieldID getFieldId(JEnv& env, const char* name, const char* signature);
+
+    JClass getClass(JEnv& env);
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<TReturn, void>,
+        void
+    >
+    invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
+    {
+        invokeVoidMethod(env, methodId, std::forward<const TArgs&>(args)...);
+    }
+
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
@@ -91,8 +110,8 @@ public:
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
         auto env = JVM::getEnv();
-        const auto methodId = getMethodId(env, name, signature);
-        invokeVoidMethod(env, methodId, std::forward<const TArgs&>(args)...);
+        auto methodId = getMethodId(env, name, signature);
+        invokeMethodJni<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
     
     template<typename TReturn, typename... TArgs>
@@ -108,7 +127,18 @@ public:
         constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
         invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
-    
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
+        !std::is_same_v<TReturn, void>,
+        TReturn
+    >
+    invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
+    {
+        return invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
+    }
+
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
@@ -119,7 +149,7 @@ public:
     {
         auto env = JVM::getEnv();
         const auto methodId = getMethodId(env, name, signature);
-        return invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
+        return invokeMethodJni<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
     
     template<typename TReturn, typename... TArgs>
@@ -137,11 +167,17 @@ public:
     }
 
     template<typename T>
+    T getFieldJni(JEnv& env, jfieldID fieldId)
+    {
+        return getFieldValue<T>(env, fieldId);
+    }
+
+    template<typename T>
     T getFieldSign(const char* name, const char* signature)
     {
         auto env = JVM::getEnv();
         const auto fieldId = getFieldId(env, name, signature);
-        return getFieldValue<T>(env, fieldId);
+        return getFieldJni<T>(env, fieldId);
     }
 
     template<typename T>
@@ -152,11 +188,17 @@ public:
     }
 
     template<typename T>
+    T setFieldJni(JEnv& env, jfieldID fieldId, const T& value)
+    {
+        return setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
+    }
+
+    template<typename T>
     T setFieldSign(const char* name, const char* signature, const T& value)
     {
         auto env = JVM::getEnv();
         const auto fieldId = getFieldId(env, name, signature);
-        return setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
+        return setFieldJni<T>(env, fieldId, std::forward<const T&>(value));
     }
 
     template<typename T>
@@ -168,10 +210,6 @@ public:
 
 protected:
     jobject obj { nullptr };
-
-    jmethodID getMethodId(JEnv& env, const char* name, const char* signature);
-
-    jfieldID getFieldId(JEnv& env, const char* name, const char* signature);
 
     inline void invokeVoidMethod(JEnv& env, jmethodID methodId)
     {
@@ -243,7 +281,8 @@ protected:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, long>,
+        std::is_same_v<TReturn, long> ||
+        std::is_same_v<TReturn, long long>,
         TReturn
     >
     invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
@@ -354,7 +393,8 @@ protected:
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, long>,
+        std::is_same_v<T, long> ||
+        std::is_same_v<T, long long>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
@@ -437,7 +477,8 @@ protected:
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, long>,
+                                  std::is_same_v<T, long> ||
+                                  std::is_same_v<T, long long>,
                                   const T&
                               > value)
     {
