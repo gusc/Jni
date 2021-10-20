@@ -16,75 +16,51 @@ class JClass;
 class JObject final
 {
 public:
-    struct JGlobal {};
-    struct JWeak {};
-
     JObject(const jobject& initObject) :
         obj(initObject)
     {}
-    JObject(const jobject& initObject, JGlobal) :
-            obj(JVM::getEnv()->NewGlobalRef(initObject))
-    {}
-    JObject(const jobject& initObject, JWeak) :
-            obj(JVM::getEnv()->NewWeakGlobalRef(initObject))
-    {}
     JObject(const JObject& other) = delete;
     JObject& operator=(const JObject& other) = delete;
-    JObject(JObject&& other)
-    {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(other.obj) == JNILocalRefType)
-        {
-            obj = env->NewGlobalRef(other.obj);
-            env->DeleteLocalRef(other.obj);
-        }
-        else
-        {
-            obj = other.obj;
-        }
-        other.obj = nullptr;
-    }
+    JObject(JObject&& other) = default;
     JObject& operator=(JObject&& other)
     {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(obj) == JNIGlobalRefType)
+        if (obj)
         {
-            env->DeleteGlobalRef(obj);
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(obj) == JNIGlobalRefType)
+            {
+                env->DeleteGlobalRef(obj);
+            }
+            else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
+            {
+                env->DeleteWeakGlobalRef(obj);
+            }
+            else
+            {
+                env->DeleteLocalRef(obj);
+            }
         }
-        else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
-        {
-            env->DeleteWeakGlobalRef(obj);
-        }
-        else
-        {
-            env->DeleteLocalRef(obj);
-        }
-        if (env->GetObjectRefType(other.obj) == JNILocalRefType)
-        {
-            obj = env->NewGlobalRef(other.obj);
-            env->DeleteLocalRef(other.obj);
-        }
-        else
-        {
-            obj = other.obj;
-        }
+        obj = other.obj;
         other.obj = nullptr;
         return *this;
     }
     ~JObject()
     {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(obj) == JNIGlobalRefType)
+        if (obj)
         {
-            env->DeleteGlobalRef(obj);
-        }
-        else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
-        {
-            env->DeleteWeakGlobalRef(obj);
-        }
-        else
-        {
-            env->DeleteLocalRef(obj);
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(obj) == JNIGlobalRefType)
+            {
+                env->DeleteGlobalRef(obj);
+            }
+            else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
+            {
+                env->DeleteWeakGlobalRef(obj);
+            }
+            else
+            {
+                env->DeleteLocalRef(obj);
+            }
         }
     }
     

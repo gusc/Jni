@@ -17,10 +17,14 @@ public:
     JClass(JEnv& initEnv, jclass initClass) :
         jniEnv(initEnv),
         cls(initClass){}
-
+    JClass(const JClass&) = delete;
+    JClass& operator=(const JClass&) = delete;
     ~JClass()
     {
-        jniEnv->DeleteLocalRef(cls);
+        if (cls)
+        {
+            jniEnv->DeleteLocalRef(cls);
+        }
     }
     
     inline std::string getClassName()
@@ -115,26 +119,6 @@ public:
     {
         constexpr auto sign = Private::getMethodSignature<void, TArgs...>();
         return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
-    }
-
-    template<typename... TArgs>
-    JObject createGlobalObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args)
-    {
-        return JObject(env->NewGlobalRef(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...)));
-    }
-
-    template<typename... TArgs>
-    JObject createGlobalObjectSign(const char* signature, const TArgs&... args)
-    {
-        const auto methodId = getMethodIdSign("<init>", signature);
-        return createGlobalObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
-    }
-
-    template<typename... TArgs>
-    JObject createGlobalObject(const TArgs&... args)
-    {
-        constexpr auto sign = Private::getMethodSignature<void, TArgs...>();
-        return createGlobalObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>

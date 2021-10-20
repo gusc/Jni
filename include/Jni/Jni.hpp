@@ -8,5 +8,6 @@
 #include "JClass.hpp"
 #include "JObject.hpp"
 #include "JArray.hpp"
+#include "JGlobalRef.hpp"
 
 #endif // __GUSC_JNI_HPP
