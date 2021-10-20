@@ -25,11 +25,11 @@ public:
     
     inline std::string getClassName()
     {
-        jmethodID getNameId = getMethodId("getName", "()Ljava/lang/String;");
+        jmethodID getNameId = getMethodIdSign("getName", "()Ljava/lang/String;");
         return JString(static_cast<jstring>(jniEnv->CallObjectMethod(cls, getNameId)));
     }
     
-    inline jmethodID getStaticMethodId(const char* name, const char* signature)
+    inline jmethodID getStaticMethodIdSign(const char* name, const char* signature)
     {
         auto methodId = jniEnv->GetStaticMethodID(cls, name, signature);
         if (!methodId)
@@ -38,8 +38,15 @@ public:
         }
         return methodId;
     }
+
+    template<typename TReturn, typename... TArgs>
+    inline jmethodID getStaticMethodId(const char* name)
+    {
+        constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
+        return getMethodId(name, sign.str);
+    }
     
-    inline jmethodID getMethodId(const char* name, const char* signature)
+    inline jmethodID getMethodIdSign(const char* name, const char* signature)
     {
         auto methodId = jniEnv->GetMethodID(cls, name, signature);
         if (!methodId)
@@ -49,7 +56,14 @@ public:
         return methodId;
     }
 
-    inline jfieldID getStaticFieldId(const char* name, const char* signature)
+    template<typename TReturn, typename... TArgs>
+    inline jmethodID getMethodId(const char* name)
+    {
+        constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
+        return getMethodIdSign(name, sign.str);
+    }
+
+    inline jfieldID getStaticFieldIdSign(const char* name, const char* signature)
     {
         auto fieldId = jniEnv->GetStaticFieldID(cls, name, signature);
         if (!fieldId)
@@ -58,8 +72,15 @@ public:
         }
         return fieldId;
     }
+
+    template<typename T>
+    inline jfieldID getStaticFieldId(const char* name)
+    {
+        constexpr auto sign = Private::getJTypeSignature<T>();
+        return getStaticFieldIdSign(name, sign.str);
+    }
     
-    inline jfieldID getFieldId(const char* name, const char* signature)
+    inline jfieldID getFieldIdSign(const char* name, const char* signature)
     {
         auto fieldId = jniEnv->GetFieldID(cls, name, signature);
         if (!fieldId)
@@ -67,6 +88,13 @@ public:
             throw std::runtime_error(std::string("Can't find instance field ") + name + " with signature " + signature);
         }
         return fieldId;
+    }
+
+    template<typename T>
+    inline jfieldID getFieldId(const char* name)
+    {
+        constexpr auto sign = Private::getJTypeSignature<T>();
+        return getFieldIdSign(name, sign.str);
     }
 
     template<typename... TArgs>
@@ -78,14 +106,14 @@ public:
     template<typename... TArgs>
     JObject createObjectSign(const char* signature, const TArgs&... args)
     {
-        const auto methodId = getMethodId("<init>", signature);
+        const auto methodId = getMethodIdSign("<init>", signature);
         return createObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename... TArgs>
     JObject createObject(const TArgs&... args)
     {
-        constexpr auto sign = Private::getArgumentSignature<TArgs...>();
+        constexpr auto sign = Private::getMethodSignature<void, TArgs...>();
         return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
 
@@ -98,14 +126,14 @@ public:
     template<typename... TArgs>
     JObject createGlobalObjectSign(const char* signature, const TArgs&... args)
     {
-        const auto methodId = getMethodId("<init>", signature);
+        const auto methodId = getMethodIdSign("<init>", signature);
         return createGlobalObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename... TArgs>
     JObject createGlobalObject(const TArgs&... args)
     {
-        constexpr auto sign = Private::getArgumentSignature<TArgs...>();
+        constexpr auto sign = Private::getMethodSignature<void, TArgs...>();
         return createGlobalObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
 
@@ -128,7 +156,7 @@ public:
     >
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
-        const auto methodId = getMethodId(name, signature);
+        const auto methodId = getMethodIdSign(name, signature);
         invokeMethodJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
@@ -140,9 +168,7 @@ public:
     >
     invokeMethod(const char* name, const TArgs&... args)
     {
-        constexpr auto argSign = Private::getArgumentSignature<TArgs...>();
-        constexpr auto retSign = Private::getJTypeSignature<TReturn > ();
-        constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
+        constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
 
@@ -165,7 +191,7 @@ public:
     >
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
-        const auto methodId = getMethodId(name, signature);
+        const auto methodId = getMethodIdSign(name, signature);
         return invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
@@ -177,9 +203,7 @@ public:
     >
     invokeMethod(const char* name, const TArgs&... args)
     {
-        constexpr auto argSign = Private::getArgumentSignature<TArgs...>();
-        constexpr auto retSign = Private::getJTypeSignature<TReturn > ();
-        constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
+        constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
 
@@ -192,7 +216,7 @@ public:
     template<typename T>
     T getFieldSign(const char* name, const char* signature)
     {
-        const auto fieldId = getStaticFieldId(name, signature);
+        const auto fieldId = getStaticFieldIdSign(name, signature);
         return getFieldJni<T>(jniEnv, fieldId);
     }
 
@@ -212,7 +236,7 @@ public:
     template<typename T>
     T setFieldSign(const char* name, const char* signature, const T& value)
     {
-        const auto fieldId = getStaticFieldId(name, signature);
+        const auto fieldId = getStaticFieldIdSign(name, signature);
         return setFieldJni<T>(jniEnv, fieldId, std::forward<const T&>(value));
     }
 
@@ -542,14 +566,14 @@ inline JClass JEnv::getObjectClass(jobject jniObject)
     return JClass(*this, cls);
 }
 
-inline jmethodID JObject::getMethodId(JEnv& env, const char* name, const char* signature)
+inline jmethodID JObject::getMethodIdJni(JEnv& env, const char* name, const char* signature)
 {
-    return getClass(env).getMethodId(name, signature);
+    return getClass(env).getMethodIdSign(name, signature);
 }
 
-inline jfieldID JObject::getFieldId(JEnv& env, const char* name, const char* signature)
+inline jfieldID JObject::getFieldIdJni(JEnv& env, const char* name, const char* signature)
 {
-    return getClass(env).getFieldId(name, signature);
+    return getClass(env).getFieldIdSign(name, signature);
 }
 
 inline JClass JObject::getClass(JEnv& env)

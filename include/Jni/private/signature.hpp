@@ -195,6 +195,14 @@ inline constexpr auto getArgumentSignature()
     return concat("");
 }
 
+template<typename TReturn, typename... TArgs>
+inline constexpr auto getMethodSignature()
+{
+    constexpr auto argSign = Private::getArgumentSignature<TArgs...>();
+    constexpr auto retSign = Private::getJTypeSignature<TReturn>();
+    return Private::concat("(", argSign.str, ")", retSign.str);
+}
+
 }
 
 #endif // __GUSC_PRIVATE_SIGNATURE_HPP
