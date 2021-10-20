@@ -5,6 +5,7 @@
 #include "JEnv.hpp"
 #include "JObject.hpp"
 #include "JString.hpp"
+#include "private/cast.hpp"
 #include "private/concat.hpp"
 #include "private/signature.hpp"
 
@@ -99,6 +100,25 @@ public:
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldIdSign(name, sign.str);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline void registerNativeMethodSign(const char* name, const char* signature, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
+    {
+        const JNINativeMethod methodsArray[] = {
+            {name, signature, Private::void_cast(fn)}
+        };
+        if (jniEnv->RegisterNatives(cls, methodsArray, sizeof(methodsArray) / sizeof(methodsArray[0])) < 0)
+        {
+            throw std::runtime_error(std::string("Failed to register native method ") + name);
+        }
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline void registerNativeMethod(const char* name, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
+    {
+        constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
+        registerNativeMethodSign<TReturn>(name, sign.str, fn);
     }
 
     template<typename... TArgs>

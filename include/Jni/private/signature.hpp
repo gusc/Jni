@@ -87,6 +87,28 @@ getJTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
+        std::is_same_v<T, jfloat>,
+        char_string<2>
+>
+getJTypeSignature()
+{
+    return concat("F");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
+        std::is_same_v<T, jdouble>,
+        char_string<2>
+>
+getJTypeSignature()
+{
+    return concat("D");
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
     std::is_same_v<T, jstring>,
     char_string<19>
 >
