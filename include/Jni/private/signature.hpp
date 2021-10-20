@@ -13,7 +13,7 @@ typename std::enable_if_t<
     std::is_same_v<T, void>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("V");
 }
@@ -21,10 +21,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jboolean>,
+    std::is_same_v<T, jboolean>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("Z");
 }
@@ -32,10 +32,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jchar>,
+    std::is_same_v<T, jchar>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("C");
 }
@@ -43,10 +43,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jbyte>,
+    std::is_same_v<T, jbyte>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("B");
 }
@@ -54,10 +54,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jshort>,
+    std::is_same_v<T, jshort>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("S");
 }
@@ -65,10 +65,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jint>,
+    std::is_same_v<T, jint>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("I");
 }
@@ -76,10 +76,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jlong>,
+    std::is_same_v<T, jlong>,
     char_string<2>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("J");
 }
@@ -87,10 +87,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jstring>,
+    std::is_same_v<T, jstring>,
     char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("Ljava/lang/String;");
 }
@@ -98,10 +98,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jbooleanArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jbooleanArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[Z");
 }
@@ -109,10 +109,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jcharArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jcharArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[C");
 }
@@ -120,10 +120,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jbyteArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jbyteArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[B");
 }
@@ -131,10 +131,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jshortArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jshortArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[S");
 }
@@ -142,10 +142,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jintArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jintArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[I");
 }
@@ -153,10 +153,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jlongArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jlongArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[J");
 }
@@ -164,10 +164,10 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jfloatArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jfloatArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[F");
 }
@@ -175,23 +175,24 @@ getTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        std::is_same_v<std::decay_t<T>, jdoubleArray>,
-        char_string<19>
+    std::is_same_v<std::decay_t<T>, std::decay_t<jdoubleArray>>,
+    char_string<19>
 >
-getTypeSignature()
+getJTypeSignature()
 {
     return concat("[D");
 }
 
+template<typename... TArgs>
+inline constexpr auto getArgumentSignature()
+{
+    return concat(getJTypeSignature<TArgs>().str...);
+}
+
+template<>
 inline constexpr auto getArgumentSignature()
 {
     return concat("");
-}
-
-template<typename T, typename... TArgs>
-inline constexpr auto getArgumentSignature(const T&, const TArgs&... args)
-{
-    return concat(getTypeSignature<T>().str, getArgumentSignature(std::forward<const TArgs&>(args)...).str);
 }
 
 }

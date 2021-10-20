@@ -85,7 +85,7 @@ public:
     template<typename... TArgs>
     JObject createObject(const TArgs&... args)
     {
-        constexpr auto sign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        constexpr auto sign = Private::getArgumentSignature<TArgs...>();
         return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
 
@@ -105,7 +105,7 @@ public:
     template<typename... TArgs>
     JObject createGlobalObject(const TArgs&... args)
     {
-        constexpr auto sign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
+        constexpr auto sign = Private::getArgumentSignature<TArgs...>();
         return createGlobalObjectSign(sign.str, std::forward<const TArgs&>(args)...);
     }
 
@@ -140,8 +140,8 @@ public:
     >
     invokeMethod(const char* name, const TArgs&... args)
     {
-        constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
-        constexpr auto retSign = Private::getTypeSignature<TReturn>();
+        constexpr auto argSign = Private::getArgumentSignature<TArgs...>();
+        constexpr auto retSign = Private::getJTypeSignature<TReturn > ();
         constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
         invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
@@ -177,8 +177,8 @@ public:
     >
     invokeMethod(const char* name, const TArgs&... args)
     {
-        constexpr auto argSign = Private::getArgumentSignature(std::forward<const TArgs&>(args)...);
-        constexpr auto retSign = Private::getTypeSignature<TReturn>();
+        constexpr auto argSign = Private::getArgumentSignature<TArgs...>();
+        constexpr auto retSign = Private::getJTypeSignature<TReturn > ();
         constexpr auto sign = Private::concat("(", argSign.str, ")", retSign.str);
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
@@ -199,7 +199,7 @@ public:
     template<typename T>
     T getField(const char* name)
     {
-        constexpr auto sign = Private::getTypeSignature<T>();
+        constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldSign<T>(name, sign.str);
     }
 
@@ -219,7 +219,7 @@ public:
     template<typename T>
     T setField(const char* name, const T& value)
     {
-        constexpr auto sign = Private::getTypeSignature<T>();
+        constexpr auto sign = Private::getJTypeSignature<T>();
         return setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
     }
     
