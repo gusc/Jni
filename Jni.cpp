@@ -1,4 +1,4 @@
-#include "include/Jni.hpp"
+#include "include/Jni/Jni.hpp"
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* /* reserved */)
 {

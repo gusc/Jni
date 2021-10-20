@@ -5,7 +5,14 @@ option(Jni_BuildTests "Build the unit tests when BUILD_TESTING is enabled." ON)
 option(Jni_AutoInit "Automatically init JNI via JNI_onLoad method" ON)
 
 set(SOURCES
-	"include/Jni.hpp")
+	"include/Jni/Jni.hpp"
+    "include/Jni/JVM.hpp"
+    "include/Jni/JEnv.hpp"
+    "include/Jni/JClass.hpp"
+    "include/Jni/JObject.hpp"
+    "include/Jni/JString.hpp"
+    "include/Jni/JArray.hpp"
+)
 	
 if(Jni_AutoInit)
     list(APPEND SOURCES "Jni.cpp")
