@@ -242,21 +242,21 @@ public:
     template<typename T>
     T setFieldJni(JEnv& env, jfieldID fieldId, const T& value)
     {
-        return setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
+        setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
     }
 
     template<typename T>
     T setFieldSign(const char* name, const char* signature, const T& value)
     {
         const auto fieldId = getStaticFieldIdSign(name, signature);
-        return setFieldJni<T>(jniEnv, fieldId, std::forward<const T&>(value));
+        setFieldJni<T>(jniEnv, fieldId, std::forward<const T&>(value));
     }
 
     template<typename T>
     T setField(const char* name, const T& value)
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
-        return setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
+        setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
     }
     
 private:
