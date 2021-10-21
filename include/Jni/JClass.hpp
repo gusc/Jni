@@ -15,9 +15,10 @@ namespace gusc::Jni
 class JClass final
 {
 public:
-    JClass(JEnv& initEnv, jclass initClass) :
-        jniEnv(initEnv),
-        cls(initClass){}
+    JClass(JEnv& initEnv, jclass initClass)
+        : jniEnv(initEnv)
+        , cls(initClass)
+    {}
     JClass(const JClass&) = delete;
     JClass& operator=(const JClass&) = delete;
     ~JClass()
@@ -131,7 +132,7 @@ public:
     template<typename... TArgs>
     JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...));
+        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...), true);
     }
 
     template<typename... TArgs>
@@ -392,7 +393,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JObject(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+        return JObject(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...), true);
     }
 
     template<typename T>
@@ -484,13 +485,46 @@ private:
     }
 
     template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, jstring>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<jstring>(env->GetStaticObjectField(cls, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, jobject>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return env->GetStaticObjectField(cls, fieldId);
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, JObject>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return JObject(env->GetStaticObjectField(cls, fieldId), true);
+    }
+
+    template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
                                   std::is_same_v<T, jboolean>,
                                   const T&
                               > value)
     {
-        env->SetBooleanField(cls, fieldId, value);
+        env->SetStaticBooleanField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -500,7 +534,7 @@ private:
                                   const T&
                               > value)
     {
-        env->SetCharField(cls, fieldId, value);
+        env->SetStaticCharField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -510,7 +544,7 @@ private:
                                   const T&
                               > value)
     {
-        env->SetByteField(cls, fieldId, value);
+        env->SetStaticByteField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -520,7 +554,7 @@ private:
                                   const T&
                               > value)
     {
-        env->SetShortField(cls, fieldId, value);
+        env->SetStaticShortField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -530,7 +564,7 @@ private:
                                   const T&
                               > value)
     {
-        env->SetIntField(cls, fieldId, value);
+        env->SetStaticIntField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -540,7 +574,7 @@ private:
                                   const T&
                               > value)
     {
-        env->SetLongField(cls, fieldId, value);
+        env->SetStaticLongField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -550,7 +584,7 @@ private:
                                   const T&
                               > value)
     {
-        env->SetFloatField(cls, fieldId, value);
+        env->SetStaticFloatField(cls, fieldId, value);
     }
 
     template<typename T>
@@ -560,7 +594,19 @@ private:
                                   const T&
                               > value)
     {
-        env->SetDoubleField(cls, fieldId, value);
+        env->SetStaticDoubleField(cls, fieldId, value);
+    }
+
+    template<typename T>
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, jstring> ||
+                                  std::is_same_v<T, jobject> ||
+                                  std::is_same_v<T, JObject>,
+                                  const T&
+                              > value)
+    {
+        env->SetStaticObjectField(cls, fieldId, static_cast<jobject>(value));
     }
 };
 

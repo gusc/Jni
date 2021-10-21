@@ -16,8 +16,9 @@ class JClass;
 class JObject final
 {
 public:
-    JObject(const jobject& initObject) :
-        obj(initObject)
+    JObject(const jobject& initObject, bool initIsOwned = false)
+        : obj(initObject)
+        , isOwned(initIsOwned)
     {}
     JObject(const JObject& other) = delete;
     JObject& operator=(const JObject& other) = delete;
@@ -35,13 +36,15 @@ public:
             {
                 env->DeleteWeakGlobalRef(obj);
             }
-            else
+            else if (isOwned)
             {
                 env->DeleteLocalRef(obj);
             }
         }
         obj = other.obj;
+        isOwned = other.isOwned;
         other.obj = nullptr;
+        other.isOwned = false;
         return *this;
     }
     ~JObject()
@@ -57,7 +60,7 @@ public:
             {
                 env->DeleteWeakGlobalRef(obj);
             }
-            else
+            else if (isOwned)
             {
                 env->DeleteLocalRef(obj);
             }
@@ -212,6 +215,7 @@ public:
 
 protected:
     jobject obj { nullptr };
+    bool isOwned { false };
 
     inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId)
     {
@@ -435,6 +439,39 @@ protected:
     }
 
     template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, jstring>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return static_cast<jstring>(env->GetObjectField(obj, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, jobject>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return env->GetObjectField(obj, fieldId);
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+        std::is_same_v<T, JObject>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return JObject(env->GetObjectField(obj, fieldId), true);
+    }
+
+    template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
                                   std::is_same_v<T, jboolean>,
@@ -512,6 +549,18 @@ protected:
                               > value)
     {
         env->SetDoubleField(obj, fieldId, value);
+    }
+
+    template<typename T>
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, jstring> ||
+                                  std::is_same_v<T, jobject> ||
+                                  std::is_same_v<T, JObject>,
+                                  const T&
+                              > value)
+    {
+        env->SetObjectField(obj, fieldId, static_cast<jobject>(value));
     }
 };
 
