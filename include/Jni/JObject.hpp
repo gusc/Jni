@@ -66,7 +66,7 @@ public:
             }
         }
     }
-    
+
     inline operator jobject() const
     {
         return obj;
@@ -122,7 +122,7 @@ public:
         auto methodId = getMethodIdJni(env, name, signature);
         invokeMethodJni<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
-    
+
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
@@ -158,7 +158,7 @@ public:
         const auto methodId = getMethodIdJni(env, name, signature);
         return invokeMethodJni<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
-    
+
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
@@ -193,13 +193,13 @@ public:
     }
 
     template<typename T>
-    T setFieldJni(JEnv& env, jfieldID fieldId, const T& value)
+    void setFieldJni(JEnv& env, jfieldID fieldId, const T& value)
     {
         setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
     }
 
     template<typename T>
-    T setFieldSign(const char* name, const char* signature, const T& value)
+    void setFieldSign(const char* name, const char* signature, const T& value)
     {
         auto env = JVM::getEnv();
         const auto fieldId = getFieldIdJni(env, name, signature);
@@ -207,7 +207,7 @@ public:
     }
 
     template<typename T>
-    T setField(const char* name, const T& value)
+    void setField(const char* name, const T& value)
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
