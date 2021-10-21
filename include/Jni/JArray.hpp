@@ -41,6 +41,10 @@ public:
         }
         return {};
     }
+    inline operator TJni()
+    {
+        return array;
+    }
     inline TJniEl* data()
     {
         return dataPtr;

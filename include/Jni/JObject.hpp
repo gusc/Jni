@@ -104,7 +104,7 @@ public:
     >
     invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        invokeVoidMethod(env, methodId, std::forward<const TArgs&>(args)...);
+        invokeMethodReturnVoid(env, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -213,14 +213,14 @@ public:
 protected:
     jobject obj { nullptr };
 
-    inline void invokeVoidMethod(JEnv& env, jmethodID methodId)
+    inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId)
     {
         env->CallVoidMethod(obj, methodId);
     }
 
     template<typename... TArgs>
     inline
-    void invokeVoidMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         env->CallVoidMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -228,102 +228,111 @@ protected:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, bool>,
+        std::is_same_v<TReturn, jboolean>,
         TReturn
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallBooleanMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallBooleanMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, char>,
+        std::is_same_v<TReturn, jchar>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallCharMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallCharMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, std::int8_t>,
+        std::is_same_v<TReturn, jbyte>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallByteMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallByteMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, short>,
+        std::is_same_v<TReturn, jshort>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallShortMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallShortMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, int>,
+        std::is_same_v<TReturn, jint>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallIntMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallIntMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, long> ||
-        std::is_same_v<TReturn, long long>,
+        std::is_same_v<TReturn, jlong>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallLongMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallLongMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, float>,
+        std::is_same_v<TReturn, jfloat>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallFloatMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallFloatMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, double>,
+        std::is_same_v<TReturn, jdouble>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return static_cast<TReturn>(env->CallDoubleMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return env->CallDoubleMethod(obj, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, std::string> ||
+            std::is_same_v<TReturn, jstring>,
+            TReturn
+    >
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    {
+        return static_cast<jstring>(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
         std::is_same_v<TReturn, JString>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JString(static_cast<jstring>(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...)));
+        return JString(invokeMethod<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -332,7 +341,7 @@ protected:
         std::is_same_v<TReturn, JObject>,
         TReturn
     >
-    invokeMethod(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         return JObject(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -340,171 +349,169 @@ protected:
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, bool>,
+        std::is_same_v<T, jboolean>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetBooleanField(obj, fieldId));
+        return env->GetBooleanField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, char>,
+        std::is_same_v<T, jchar>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetCharField(obj, fieldId));
+        return env->GetCharField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, std::int8_t>,
+        std::is_same_v<T, jbyte>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetByteField(obj, fieldId));
+        return env->GetByteField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, short>,
+        std::is_same_v<T, jshort>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetShortField(obj, fieldId));
+        return env->GetShortField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, int>,
+        std::is_same_v<T, jint>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetIntField(obj, fieldId));
+        return env->GetIntField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, long> ||
-        std::is_same_v<T, long long>,
+        std::is_same_v<T, jlong>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetLongField(obj, fieldId));
+        return env->GetLongField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, float>,
+        std::is_same_v<T, jfloat>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetFloatField(obj, fieldId));
+        return env->GetFloatField(obj, fieldId);
     }
 
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, double>,
+        std::is_same_v<T, jdouble>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return static_cast<T>(env->GetDoubleField(obj, fieldId));
+        return env->GetDoubleField(obj, fieldId);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, bool>,
+                                  std::is_same_v<T, jboolean>,
                                   const T&
                               > value)
     {
-        env->SetBooleanField(obj, fieldId, static_cast<jboolean>(value));
+        env->SetBooleanField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, char>,
+                                  std::is_same_v<T, jchar>,
                                   const T&
                               > value)
     {
-        env->SetCharField(obj, fieldId, static_cast<jchar>(value));
+        env->SetCharField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, std::int8_t>,
+                                  std::is_same_v<T, jbyte>,
                                   const T&
                               > value)
     {
-        env->SetByteField(obj, fieldId, static_cast<jbyte>(value));
+        env->SetByteField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, short>,
+                                  std::is_same_v<T, jshort>,
                                   const T&
                               > value)
     {
-        env->SetShortField(obj, fieldId, static_cast<jshort>(value));
+        env->SetShortField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, int>,
+                                  std::is_same_v<T, jint>,
                                   const T&
                               > value)
     {
-        env->SetIntField(obj, fieldId, static_cast<jint>(value));
+        env->SetIntField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, long> ||
-                                  std::is_same_v<T, long long>,
+                                  std::is_same_v<T, jlong>,
                                   const T&
                               > value)
     {
-        env->SetLongField(obj, fieldId, static_cast<jlong>(value));
+        env->SetLongField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, float>,
+                                  std::is_same_v<T, jfloat>,
                                   const T&
                               > value)
     {
-        env->SetFloatField(obj, fieldId, static_cast<jfloat>(value));
+        env->SetFloatField(obj, fieldId, value);
     }
 
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, double>,
+                                  std::is_same_v<T, jdouble>,
                                   const T&
                               > value)
     {
-        env->SetDoubleField(obj, fieldId, static_cast<jdouble>(value));
+        env->SetDoubleField(obj, fieldId, value);
     }
 };
 

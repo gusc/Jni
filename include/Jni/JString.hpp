@@ -40,17 +40,21 @@ public:
         }
         return {};
     }
+    operator jstring()
+    {
+        return string;
+    }
     inline const char* data()
     {
         return dataPtr;
     }
 
-    static jstring createFrom(JEnv env, const std::string& str)
+    static JString createFrom(JEnv env, const std::string& str)
     {
-        return env->NewStringUTF(str.c_str());
+        return JString(env, env->NewStringUTF(str.c_str()));
     }
 
-    static jstring createFrom(const std::string& str)
+    static JString createFrom(const std::string& str)
     {
         return createFrom(JVM::getEnv(), str);
     }
