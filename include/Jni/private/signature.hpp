@@ -109,7 +109,8 @@ getJTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-    std::is_same_v<T, jstring>,
+    std::is_same_v<T, jstring> ||
+    std::is_same_v<T, JString>,
     char_string<19>
 >
 getJTypeSignature()

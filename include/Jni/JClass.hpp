@@ -169,7 +169,7 @@ public:
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
         const auto methodId = getMethodIdSign(name, signature);
-        invokeMethodJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
+        invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>

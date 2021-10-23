@@ -5,6 +5,8 @@
 #include "JVM.hpp"
 #include "JEnv.hpp"
 
+#include <string>
+
 namespace gusc::Jni
 {
 

@@ -6,6 +6,20 @@
 //  Copyright © 2021 Gusts Kaksis. All rights reserved.
 //
 
-int main(int argc, const char * argv[]) {
-    return 0;
+#include "Jni/Jni.hpp"
+#include "InstanceTest.hpp"
+#include "StaticTest.hpp"
+#include "NativeClassTest.hpp"
+
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* /* reserved */)
+{
+    gusc::Jni::JVM::init(vm);
+
+    runInstanceTest();
+    runStaticTest();
+
+    registerNativeMethods();
+    runNativeTest();
+
+    return JNI_VERSION_1_6;
 }
