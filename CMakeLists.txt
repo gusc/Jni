@@ -32,5 +32,5 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 
 include(CTest)
 if(BUILD_TESTING AND Jni_BuildTests)
-    add_subdirectory(Tests)
+    # TODO: run gradlew as a custom build step
 endif()
