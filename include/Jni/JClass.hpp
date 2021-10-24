@@ -118,7 +118,7 @@ public:
         };
         if (jniEnv->RegisterNatives(cls, methodsArray, sizeof(methodsArray) / sizeof(methodsArray[0])) < 0)
         {
-            throw std::runtime_error(std::string("Failed to register native method ") + name);
+            throw std::runtime_error(std::string("Failed to register native method ") + name + " with signature " + signature);
         }
     }
 
@@ -132,7 +132,12 @@ public:
     template<typename... TArgs>
     JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JObject(env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...), true);
+        auto obj = env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...);
+        if (!obj)
+        {
+            throw std::runtime_error(std::string("Failed to reate Java object "));
+        }
+        return JObject(obj, true);
     }
 
     template<typename... TArgs>
@@ -158,6 +163,7 @@ public:
     invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         invokeMethodReturnVoid(env, methodId, std::forward<const TArgs&>(args)...);
+        JEnv::checkException(env);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -192,7 +198,9 @@ public:
     >
     invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
+        auto res = invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
+        JEnv::checkException(env);
+        return res;
     }
 
     template<typename TReturn, typename... TArgs>
@@ -628,6 +636,17 @@ inline JClass JEnv::getObjectClass(jobject jniObject)
         throw std::runtime_error("Class not found");
     }
     return JClass(*this, cls);
+}
+
+inline void JEnv::checkException(JEnv& env)
+{
+    if (env->ExceptionCheck() == JNI_TRUE)
+    {
+        auto ex = JObject(static_cast<jobject>(env->ExceptionOccurred()));
+        auto message = JString(ex.invokeMethod<jstring>("getMessage"));
+        env->ExceptionClear();
+        throw std::runtime_error(std::string("JNI Exception occured: ") + static_cast<std::string>(message));
+    }
 }
 
 inline jmethodID JObject::getMethodIdJni(JEnv& env, const char* name, const char* signature)

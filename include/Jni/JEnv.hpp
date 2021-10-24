@@ -27,7 +27,9 @@ public:
     {
         return env;
     }
-    
+
+    static void checkException(JEnv& env);
+
 private:
     JNIEnv* env { nullptr };
 };

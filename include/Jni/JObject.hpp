@@ -108,6 +108,7 @@ public:
     invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
         invokeMethodReturnVoid(env, methodId, std::forward<const TArgs&>(args)...);
+        JEnv::checkException(env);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -143,7 +144,9 @@ public:
     >
     invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
+        auto res = invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
+        JEnv::checkException(env);
+        return res;
     }
 
     template<typename TReturn, typename... TArgs>
