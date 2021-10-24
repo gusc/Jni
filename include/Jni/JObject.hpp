@@ -25,22 +25,7 @@ public:
     JObject(JObject&& other) = default;
     JObject& operator=(JObject&& other)
     {
-        if (obj)
-        {
-            auto env = JVM::getEnv();
-            if (env->GetObjectRefType(obj) == JNIGlobalRefType)
-            {
-                env->DeleteGlobalRef(obj);
-            }
-            else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
-            {
-                env->DeleteWeakGlobalRef(obj);
-            }
-            else if (isOwned)
-            {
-                env->DeleteLocalRef(obj);
-            }
-        }
+        dispose();
         obj = other.obj;
         isOwned = other.isOwned;
         other.obj = nullptr;
@@ -49,22 +34,7 @@ public:
     }
     ~JObject()
     {
-        if (obj)
-        {
-            auto env = JVM::getEnv();
-            if (env->GetObjectRefType(obj) == JNIGlobalRefType)
-            {
-                env->DeleteGlobalRef(obj);
-            }
-            else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
-            {
-                env->DeleteWeakGlobalRef(obj);
-            }
-            else if (isOwned)
-            {
-                env->DeleteLocalRef(obj);
-            }
-        }
+        dispose();
     }
 
     inline operator jobject() const
@@ -220,6 +190,26 @@ protected:
     jobject obj { nullptr };
     bool isOwned { false };
 
+    void dispose()
+    {
+        if (obj)
+        {
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(obj) == JNIGlobalRefType)
+            {
+                env->DeleteGlobalRef(obj);
+            }
+            else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
+            {
+                env->DeleteWeakGlobalRef(obj);
+            }
+            else if (isOwned)
+            {
+                env->DeleteLocalRef(obj);
+            }
+        }
+    }
+
     inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId)
     {
         env->CallVoidMethod(obj, methodId);
@@ -339,7 +329,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JString(invokeMethod<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
+        return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename TReturn, typename... TArgs>

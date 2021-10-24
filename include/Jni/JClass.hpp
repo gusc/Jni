@@ -390,7 +390,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
     {
-        return JString(invokeMethod<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
+        return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -643,7 +643,7 @@ inline void JEnv::checkException(JEnv& env)
     if (env->ExceptionCheck() == JNI_TRUE)
     {
         auto ex = JObject(static_cast<jobject>(env->ExceptionOccurred()));
-        auto message = JString(ex.invokeMethod<jstring>("getMessage"));
+        auto message = ex.invokeMethod<JString>("getMessage");
         env->ExceptionClear();
         throw std::runtime_error(std::string("JNI Exception occured: ") + static_cast<std::string>(message));
     }

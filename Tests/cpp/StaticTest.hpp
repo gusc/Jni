@@ -40,7 +40,7 @@ void runStaticTestMethodsAndFields(JClass& cls)
     f = cls.invokeMethod<jlong>("getLong");
     g = cls.invokeMethod<jfloat>("getFloat");
     h = cls.invokeMethod<jdouble>("getDouble");
-    auto x = cls.invokeMethod<jstring>("getString");
+    i = std::move(cls.invokeMethod<jstring>("getString"));
 
     cls.setField("booleanField", a);
     cls.setField("byteField", b);
@@ -60,7 +60,7 @@ void runStaticTestMethodsAndFields(JClass& cls)
     f = cls.getField<jlong>("longField");
     g = cls.getField<jfloat>("floatField");
     h = cls.getField<jdouble>("doubleField");
-    auto y = cls.getField<jstring>("stringField");
+    i = std::move(cls.getField<jstring>("stringField"));
 
     cls.invokeMethod<void>("voidMethod", a, b, c, d, e, f, g, h, static_cast<jstring>(i));
 

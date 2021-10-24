@@ -25,14 +25,24 @@ public:
     JString(const jstring& initString) : JString(JVM::getEnv(), initString)
     {}
     JString(const JString& other) = delete;
-    JString& operator = (const JString& other) = delete;
+    JString& operator=(const JString& other) = delete;
+    JString(JString&& other) = default;
+    JString& operator=(JString&& other)
+    {
+        dispose();
+        isCopy = other.isCopy;
+        length = other.length;
+        string = other.string;
+        dataPtr = other.dataPtr;
+        other.isCopy = JNI_FALSE;
+        other.length = 0;
+        other.string = nullptr;
+        other.dataPtr = nullptr;
+        return *this;
+    }
     ~JString()
     {
-        if (string && isCopy == JNI_TRUE)
-        {
-            auto env = JVM::getEnv();
-            env->ReleaseStringUTFChars(string, dataPtr);
-        }
+        dispose();
     }
     operator std::string()
     {
@@ -66,6 +76,15 @@ private:
     std::size_t length { 0 };
     jstring string { nullptr };
     const char* dataPtr { nullptr };
+
+    void dispose()
+    {
+        if (string && isCopy == JNI_TRUE)
+        {
+            auto env = JVM::getEnv();
+            env->ReleaseStringUTFChars(string, dataPtr);
+        }
+    }
 };
 
 }

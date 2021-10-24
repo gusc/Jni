@@ -25,13 +25,23 @@ public:
     {}
     JArray(const JArray<TCpp>& other) = delete;
     JArray& operator = (const JArray<TCpp>& other) = delete;
+    JArray(JArray&& other) = default;
+    JArray& operator=(JArray&& other)
+    {
+        dispose();
+        isCopy = other.isCopy;
+        length = other.length;
+        array = other.array;
+        dataPtr = other.dataPtr;
+        other.isCopy = JNI_FALSE;
+        other.length = 0;
+        other.array = nullptr;
+        other.dataPtr = nullptr;
+        return *this;
+    }
     ~JArray()
     {
-        if (array && isCopy == JNI_TRUE)
-        {
-            auto env = JVM::getEnv();
-            freeDataPtr<TJni>(env);
-        }
+        dispose();
     }
     inline operator TCpp()
     {
@@ -131,6 +141,15 @@ private:
     std::size_t length { 0 };
     TJni array { nullptr };
     TJniEl* dataPtr { nullptr };
+
+    void dispose()
+    {
+        if (array && isCopy == JNI_TRUE)
+        {
+            auto env = JVM::getEnv();
+            freeDataPtr<TJni>(env);
+        }
+    }
 
     template<typename T>
     inline
