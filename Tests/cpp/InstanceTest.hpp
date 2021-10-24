@@ -50,7 +50,7 @@ void runInstanceTestMethodsAndFields(JObject& obj)
     obj.setField("longField", f);
     obj.setField("floatField", g);
     obj.setField("doubleField", h);
-    obj.setField("stringField", static_cast<jstring>(i));
+    obj.setField("stringField", i);
 
     a = obj.getField<jboolean>("booleanField");
     b = obj.getField<jbyte>("byteField");

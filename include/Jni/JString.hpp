@@ -56,6 +56,10 @@ public:
     {
         return string;
     }
+    operator jstring() const
+    {
+        return string;
+    }
     inline const char* data()
     {
         return dataPtr;

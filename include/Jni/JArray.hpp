@@ -55,6 +55,10 @@ public:
     {
         return array;
     }
+    inline operator TJni() const
+    {
+        return array;
+    }
     inline TJniEl* data()
     {
         return dataPtr;

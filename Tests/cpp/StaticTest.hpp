@@ -50,7 +50,7 @@ void runStaticTestMethodsAndFields(JClass& cls)
     cls.setField("longField", f);
     cls.setField("floatField", g);
     cls.setField("doubleField", h);
-    cls.setField("stringField", static_cast<jstring>(i));
+    cls.setField("stringField", i);
 
     a = cls.getField<jboolean>("booleanField");
     b = cls.getField<jbyte>("byteField");
