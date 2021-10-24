@@ -40,7 +40,7 @@ void runInstanceTestMethodsAndFields(JObject& obj)
     f = obj.invokeMethod<jlong>("getLong");
     g = obj.invokeMethod<jfloat>("getFloat");
     h = obj.invokeMethod<jdouble>("getDouble");
-    i = std::move(obj.invokeMethod<jstring>("getString"));
+    i = obj.invokeMethod<JString>("getString");
 
     obj.setField("booleanField", a);
     obj.setField("byteField", b);
@@ -60,7 +60,7 @@ void runInstanceTestMethodsAndFields(JObject& obj)
     f = obj.getField<jlong>("longField");
     g = obj.getField<jfloat>("floatField");
     h = obj.getField<jdouble>("doubleField");
-    i = std::move(obj.getField<jstring>("stringField"));
+    i = obj.getField<JString>("stringField");
 
     obj.invokeMethod<void>("voidMethod", a, b, c, d, e, f, g, h, static_cast<jstring>(i));
 

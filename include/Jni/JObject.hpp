@@ -445,6 +445,17 @@ protected:
     template<typename T>
     inline
     typename std::enable_if_t<
+        std::is_same_v<T, JString>,
+        T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId)
+    {
+        return JString(getFieldValue<jstring>(env, fieldId));
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
         std::is_same_v<T, jobject>,
         T
     >
@@ -461,7 +472,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId)
     {
-        return JObject(env->GetObjectField(obj, fieldId), true);
+        return JObject(getFieldValue<jobject>(env, fieldId), true);
     }
 
     template<typename T>
@@ -554,6 +565,16 @@ protected:
                               > value)
     {
         env->SetObjectField(obj, fieldId, static_cast<jobject>(value));
+    }
+
+    template<typename T>
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                  std::is_same_v<T, JString>,
+                                  const T&
+                              > value)
+    {
+        setFieldValue<jstring>(env, fieldId, static_cast<jstring>(value));
     }
 };
 
