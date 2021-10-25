@@ -174,7 +174,7 @@ public:
     >
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
-        const auto methodId = getMethodIdSign(name, signature);
+        const auto methodId = getStaticMethodIdSign(name, signature);
         invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
@@ -211,7 +211,7 @@ public:
     >
     invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
     {
-        const auto methodId = getMethodIdSign(name, signature);
+        const auto methodId = getStaticMethodIdSign(name, signature);
         return invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
