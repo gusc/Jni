@@ -1,17 +1,19 @@
 # Jni wrapper library
 
-This header-only library provides handy wrapper classes for JNI objects.
+This C++17 header-only library provides handy wrapper classes for JNI objects.
 
 The library provides:
 
 * Safe way to manage `jobject` lifetimes.
 * Safe way to get `JniEnv` pointer that is associated with current thread.
 * Simpler method invocation with automatic signature generation for simple JNI types.
+* Simpler field getters and setters with automatic signature generation for simple JNI types.
+* Java exception marshalling.
 
 Simple usage:
 
 ```c++
-JObject strObj = JVM::getEnv().getClass("java/lang/String").createObject<>();
+JObject strObj = JVM::getEnv().getClass("java/lang/String").createObject();
 const auto strLen = strObj.invokeMethod<jlong>("length");
 ```
 
@@ -20,7 +22,9 @@ Register native method:
 ```c++
 void myNativeMethod(JNIEnv* /*env*/, jobject thiz, jlong val)
 {
-    JObject(thiz).invokeMethod<void>("callBack", val);
+    JObject obj(thiz);
+    const auto fieldVal = obj.getField<jlong>("someLongField");
+    obj.invokeMethod<void>("callBack", val + fieldVal);
 }
 
 void registerMethod()
@@ -180,3 +184,10 @@ Methods:
 * `static TJni createFrom(JEnv, const std::vector<TCpp>&)` - construct a new `TJni` from `std::vector<TCpp>`
 * `operator std::vector<TCpp>()` - construct new `std::vecotr<TCpp>` from `TJni`
 * `operator TJni()` - access internal `TJni` object
+
+## TODO
+
+1. Propper container (JString, JArray) tests
+2. Global references for containers (rething the global references in general and define stricter rules)
+3. Signature generator for JObject, maybe non-type template parameters can be used to achieve the constexpr generation
+4. Exception marshalling from C++ to Java
