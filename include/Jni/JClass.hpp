@@ -29,7 +29,7 @@ public:
         }
     }
     
-    inline std::string getClassPath()
+    inline std::string getClassPath() const noexcept
     {
         jmethodID getNameId = getMethodIdSign("getName", "()Ljava/lang/String;");
         std::string className = JString(static_cast<jstring>(jniEnv->CallObjectMethod(cls, getNameId)));
@@ -42,7 +42,7 @@ public:
         return className;
     }
     
-    inline jmethodID getStaticMethodIdSign(const char* name, const char* signature)
+    inline jmethodID getStaticMethodIdSign(const char* name, const char* signature) const
     {
         auto methodId = jniEnv->GetStaticMethodID(cls, name, signature);
         if (!methodId)
@@ -53,13 +53,13 @@ public:
     }
 
     template<typename TReturn, typename... TArgs>
-    inline jmethodID getStaticMethodId(const char* name)
+    inline jmethodID getStaticMethodId(const char* name) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return getMethodId(name, sign.str);
     }
     
-    inline jmethodID getMethodIdSign(const char* name, const char* signature)
+    inline jmethodID getMethodIdSign(const char* name, const char* signature) const
     {
         auto methodId = jniEnv->GetMethodID(cls, name, signature);
         if (!methodId)
@@ -70,13 +70,13 @@ public:
     }
 
     template<typename TReturn, typename... TArgs>
-    inline jmethodID getMethodId(const char* name)
+    inline jmethodID getMethodId(const char* name) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return getMethodIdSign(name, sign.str);
     }
 
-    inline jfieldID getStaticFieldIdSign(const char* name, const char* signature)
+    inline jfieldID getStaticFieldIdSign(const char* name, const char* signature) const
     {
         auto fieldId = jniEnv->GetStaticFieldID(cls, name, signature);
         if (!fieldId)
@@ -87,13 +87,13 @@ public:
     }
 
     template<typename T>
-    inline jfieldID getStaticFieldId(const char* name)
+    inline jfieldID getStaticFieldId(const char* name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getStaticFieldIdSign(name, sign.str);
     }
     
-    inline jfieldID getFieldIdSign(const char* name, const char* signature)
+    inline jfieldID getFieldIdSign(const char* name, const char* signature) const
     {
         auto fieldId = jniEnv->GetFieldID(cls, name, signature);
         if (!fieldId)
@@ -104,7 +104,7 @@ public:
     }
 
     template<typename T>
-    inline jfieldID getFieldId(const char* name)
+    inline jfieldID getFieldId(const char* name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldIdSign(name, sign.str);
@@ -130,7 +130,7 @@ public:
     }
 
     template<typename... TArgs>
-    JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args)
+    JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args) const
     {
         auto obj = env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...);
         if (!obj)
@@ -141,14 +141,14 @@ public:
     }
 
     template<typename... TArgs>
-    JObject createObjectSign(const char* signature, const TArgs&... args)
+    JObject createObjectSign(const char* signature, const TArgs&... args) const
     {
         const auto methodId = getMethodIdSign("<init>", signature);
         return createObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename... TArgs>
-    JObject createObject(const TArgs&... args)
+    JObject createObject(const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<void, TArgs...>();
         return createObjectSign(sign.str, std::forward<const TArgs&>(args)...);
@@ -160,7 +160,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args) const
     {
         invokeMethodReturnVoid(env, methodId, std::forward<const TArgs&>(args)...);
         JEnv::checkException(env);
@@ -172,7 +172,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
+    invokeMethodSign(const char* name, const char* signature, const TArgs&... args) const
     {
         const auto methodId = getStaticMethodIdSign(name, signature);
         invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
@@ -184,7 +184,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethod(const char* name, const TArgs&... args)
+    invokeMethod(const char* name, const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
@@ -196,7 +196,7 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodJni(JEnv& env, jmethodID methodId, const TArgs&... args) const
     {
         auto res = invokeMethodReturn<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
         JEnv::checkException(env);
@@ -209,7 +209,7 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethodSign(const char* name, const char* signature, const TArgs&... args)
+    invokeMethodSign(const char* name, const char* signature, const TArgs&... args) const
     {
         const auto methodId = getStaticMethodIdSign(name, signature);
         return invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
@@ -221,34 +221,34 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethod(const char* name, const TArgs&... args)
+    invokeMethod(const char* name, const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
     }
 
     template<typename T>
-    T getFieldJni(JEnv& env, jfieldID fieldId)
+    T getFieldJni(JEnv& env, jfieldID fieldId) const noexcept
     {
         return getFieldValue<T>(env, fieldId);
     }
 
     template<typename T>
-    T getFieldSign(const char* name, const char* signature)
+    T getFieldSign(const char* name, const char* signature) const
     {
         const auto fieldId = getStaticFieldIdSign(name, signature);
         return getFieldJni<T>(jniEnv, fieldId);
     }
 
     template<typename T>
-    T getField(const char* name)
+    T getField(const char* name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldSign<T>(name, sign.str);
     }
 
     template<typename T>
-    void setFieldJni(JEnv& env, jfieldID fieldId, const T& value)
+    void setFieldJni(JEnv& env, jfieldID fieldId, const T& value) noexcept
     {
         setFieldValue<T>(env, fieldId, std::forward<const T&>(value));
     }
@@ -271,14 +271,14 @@ private:
     JEnv& jniEnv;
     jclass cls { nullptr };
 
-    inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId)
+    inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId) const noexcept
     {
         env->CallStaticVoidMethod(cls, methodId);
     }
 
     template<typename... TArgs>
     inline
-    void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args)
+    void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         env->CallStaticVoidMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -289,7 +289,7 @@ private:
         std::is_same_v<TReturn, jboolean>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticBooleanMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -300,7 +300,7 @@ private:
         std::is_same_v<TReturn, jchar>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticCharMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -311,7 +311,7 @@ private:
         std::is_same_v<TReturn, jbyte>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticByteMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -322,7 +322,7 @@ private:
         std::is_same_v<TReturn, jshort>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticShortMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -333,7 +333,7 @@ private:
         std::is_same_v<TReturn, jint>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticIntMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -344,7 +344,7 @@ private:
         std::is_same_v<TReturn, jlong>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticLongMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -355,7 +355,7 @@ private:
         std::is_same_v<TReturn, jfloat>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticFloatMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -366,7 +366,7 @@ private:
         std::is_same_v<TReturn, jdouble>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return env->CallStaticDoubleMethod(cls, methodId, std::forward<const TArgs&>(args)...);
     }
@@ -377,7 +377,7 @@ private:
         std::is_same_v<TReturn, jstring>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return static_cast<jstring>(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -388,7 +388,7 @@ private:
             std::is_same_v<TReturn, JString>,
             TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
     }
@@ -399,7 +399,7 @@ private:
         std::is_same_v<TReturn, JObject>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args)
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
         return JObject(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...), true);
     }
@@ -410,7 +410,7 @@ private:
         std::is_same_v<T, jboolean>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticBooleanField(cls, fieldId);
     }
@@ -421,7 +421,7 @@ private:
         std::is_same_v<T, jchar>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticCharField(cls, fieldId);
     }
@@ -432,7 +432,7 @@ private:
         std::is_same_v<T, jbyte>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticByteField(cls, fieldId);
     }
@@ -443,7 +443,7 @@ private:
         std::is_same_v<T, jshort>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticShortField(cls, fieldId);
     }
@@ -454,7 +454,7 @@ private:
         std::is_same_v<T, jint>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticIntField(cls, fieldId);
     }
@@ -465,7 +465,7 @@ private:
         std::is_same_v<T, jlong>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticLongField(cls, fieldId);
     }
@@ -476,7 +476,7 @@ private:
         std::is_same_v<T, jfloat>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticFloatField(cls, fieldId);
     }
@@ -487,7 +487,7 @@ private:
         std::is_same_v<T, jdouble>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticDoubleField(cls, fieldId);
     }
@@ -498,7 +498,7 @@ private:
         std::is_same_v<T, jstring>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return static_cast<jstring>(env->GetStaticObjectField(cls, fieldId));
     }
@@ -509,7 +509,7 @@ private:
         std::is_same_v<T, JString>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return JString(getFieldValue<jstring>(env, fieldId));
     }
@@ -520,7 +520,7 @@ private:
         std::is_same_v<T, jobject>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return env->GetStaticObjectField(cls, fieldId);
     }
@@ -531,9 +531,27 @@ private:
         std::is_same_v<T, JObject>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId)
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return JObject(getFieldValue<jobject>(env, fieldId), true);
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<
+            std::is_same_v<T, jbyteArray> ||
+            std::is_same_v<T, jcharArray> ||
+            std::is_same_v<T, jshortArray> ||
+            std::is_same_v<T, jintArray> ||
+            std::is_same_v<T, jlongArray> ||
+            std::is_same_v<T, jfloatArray> ||
+            std::is_same_v<T, jdoubleArray> ||
+            std::is_same_v<T, jobjectArray>,
+            T
+    >
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
+    {
+        return static_cast<T>(getFieldValue<jobject>(env, fieldId));
     }
 
     template<typename T>
@@ -541,7 +559,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jboolean>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticBooleanField(cls, fieldId, value);
     }
@@ -551,7 +569,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jchar>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticCharField(cls, fieldId, value);
     }
@@ -561,7 +579,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jbyte>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticByteField(cls, fieldId, value);
     }
@@ -571,7 +589,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jshort>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticShortField(cls, fieldId, value);
     }
@@ -581,7 +599,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jint>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticIntField(cls, fieldId, value);
     }
@@ -591,7 +609,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jlong>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticLongField(cls, fieldId, value);
     }
@@ -601,7 +619,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jfloat>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticFloatField(cls, fieldId, value);
     }
@@ -611,7 +629,7 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, jdouble>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticDoubleField(cls, fieldId, value);
     }
@@ -623,7 +641,7 @@ private:
                                   std::is_same_v<T, jobject> ||
                                   std::is_same_v<T, JObject>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         env->SetStaticObjectField(cls, fieldId, static_cast<jobject>(value));
     }
@@ -633,10 +651,28 @@ private:
                               typename std::enable_if_t<
                                   std::is_same_v<T, JString>,
                                   const T&
-                              > value)
+                              > value) noexcept
     {
         setFieldValue<jstring>(env, fieldId, static_cast<jstring>(value));
     }
+
+    template<typename T>
+    inline void setFieldValue(JEnv& env, jfieldID fieldId,
+                              typename std::enable_if_t<
+                                      std::is_same_v<T, jbyteArray> ||
+                                      std::is_same_v<T, jcharArray> ||
+                                      std::is_same_v<T, jshortArray> ||
+                                      std::is_same_v<T, jintArray> ||
+                                      std::is_same_v<T, jlongArray> ||
+                                      std::is_same_v<T, jfloatArray> ||
+                                      std::is_same_v<T, jdoubleArray> ||
+                                      std::is_same_v<T, jobjectArray>,
+                                      const T&
+                              > value) noexcept
+    {
+        setFieldValue<jobject>(env, fieldId, static_cast<jobject>(value));
+    }
+
 };
 
 inline JClass JEnv::getClass(const char* classPath)
@@ -670,22 +706,22 @@ inline void JEnv::checkException(JEnv& env)
     }
 }
 
-inline jmethodID JObject::getMethodIdJni(JEnv& env, const char* name, const char* signature)
+inline jmethodID JObject::getMethodIdJni(JEnv& env, const char* name, const char* signature) const
 {
     return getClass(env).getMethodIdSign(name, signature);
 }
 
-inline jfieldID JObject::getFieldIdJni(JEnv& env, const char* name, const char* signature)
+inline jfieldID JObject::getFieldIdJni(JEnv& env, const char* name, const char* signature) const
 {
     return getClass(env).getFieldIdSign(name, signature);
 }
 
-inline JClass JObject::getClass(JEnv& env)
+inline JClass JObject::getClass(JEnv& env) const noexcept
 {
     return env.getObjectClass(obj);
 }
 
-inline JClass JObject::getClass()
+inline JClass JObject::getClass() const noexcept
 {
     auto env = JVM::getEnv();
     return getClass(env);

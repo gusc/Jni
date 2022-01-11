@@ -122,7 +122,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jbooleanArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -133,7 +133,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jcharArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -144,7 +144,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jbyteArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -155,7 +155,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jshortArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -166,7 +166,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jintArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -177,7 +177,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jlongArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -188,7 +188,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jfloatArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -199,7 +199,7 @@ template<typename T>
 inline constexpr
 typename std::enable_if_t<
     std::is_same_v<std::decay_t<T>, std::decay_t<jdoubleArray>>,
-    char_string<19>
+    char_string<3>
 >
 getJTypeSignature()
 {
@@ -221,8 +221,8 @@ inline constexpr auto getArgumentSignature()
 template<typename TReturn, typename... TArgs>
 inline constexpr auto getMethodSignature()
 {
-    constexpr auto argSign = Private::getArgumentSignature<TArgs...>();
-    constexpr auto retSign = Private::getJTypeSignature<TReturn>();
+    constexpr const auto argSign = Private::getArgumentSignature<TArgs...>();
+    constexpr const auto retSign = Private::getJTypeSignature<TReturn>();
     return Private::concat("(", argSign.str, ")", retSign.str);
 }
 

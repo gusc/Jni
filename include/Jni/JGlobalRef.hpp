@@ -16,6 +16,8 @@ public:
     {}
     JGlobalRef(const JGlobalRef&) = delete;
     JGlobalRef& operator=(const JGlobalRef&) = delete;
+    JGlobalRef(JGlobalRef&&) = default;
+    JGlobalRef& operator=(JGlobalRef&&) = default;
     ~JGlobalRef() = default;
 
     inline operator jobject()
@@ -23,6 +25,10 @@ public:
         return static_cast<jobject>(obj);
     }
     inline JObject* operator->()
+    {
+        return &obj;
+    }
+    inline const JObject* operator->() const
     {
         return &obj;
     }
