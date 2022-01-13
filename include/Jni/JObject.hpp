@@ -25,7 +25,13 @@ public:
     {}
     JObject(const JObject& other) = delete;
     JObject& operator=(const JObject& other) = delete;
-    JObject(JObject&& other) = default;
+    JObject(JObject&& other)
+        : obj(other.obj)
+        , isOwned(other.isOwned)
+    {
+        other.obj = nullptr;
+        other.isOwned = false;
+    }
     JObject& operator=(JObject&& other)
     {
         dispose();
