@@ -30,6 +30,10 @@ public:
     {
         return &obj;
     }
+    inline JObject& operator*()
+    {
+        return obj;
+    }
     inline const JObject* operator->() const
     {
         return &obj;
