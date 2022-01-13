@@ -16,6 +16,9 @@ class JClass;
 class JObject final
 {
 public:
+    /// @brief create new JNI object wrapper
+    /// @param initObject - the jobject to wrap
+    /// @param initIsOwned - whether we own this object (objects created by you, must be owned, so that they are freed on destruction)
     JObject(const jobject& initObject, bool initIsOwned = false)
         : obj(initObject)
         , isOwned(initIsOwned)
@@ -40,6 +43,16 @@ public:
     inline operator jobject() const
     {
         return obj;
+    }
+
+    /// @brief Release the wrapped object. If it was owned, it's ownership is also released.
+    /// @note Use this method to return an object from native method
+    inline jobject release()
+    {
+        auto tmp = obj;
+        obj = nullptr;
+        isOwned = false;
+        return tmp;
     }
 
     jmethodID getMethodIdJni(JEnv& env, const char* name, const char* signature) const;
@@ -192,7 +205,7 @@ protected:
 
     void dispose()
     {
-        if (obj)
+        if (obj && isOwned)
         {
             auto env = JVM::getEnv();
             if (env->GetObjectRefType(obj) == JNIGlobalRefType)
@@ -203,10 +216,11 @@ protected:
             {
                 env->DeleteWeakGlobalRef(obj);
             }
-            else if (isOwned)
+            else
             {
                 env->DeleteLocalRef(obj);
             }
+            obj = nullptr;
         }
     }
 

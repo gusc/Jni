@@ -11,8 +11,10 @@ namespace gusc::Jni
 class JGlobalRef final
 {
 public:
+    /// @brief create global reference to JNI object and wrap it
+    /// @note this automatically assumes the ownership of the global reference object
     JGlobalRef(jobject initObj)
-        : obj(JVM::getEnv()->NewGlobalRef(initObj))
+        : obj(JVM::getEnv()->NewGlobalRef(initObj), true)
     {}
     JGlobalRef(const JGlobalRef&) = delete;
     JGlobalRef& operator=(const JGlobalRef&) = delete;
