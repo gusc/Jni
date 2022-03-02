@@ -396,6 +396,17 @@ private:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
+            std::is_same_v<TReturn, jobject>,
+            TReturn
+    >
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
+    {
+        return env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+    }
+
+    template<typename TReturn, typename... TArgs>
+    inline
+    typename std::enable_if_t<
         std::is_same_v<TReturn, JObject>,
         TReturn
     >
