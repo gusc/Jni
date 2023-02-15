@@ -11,6 +11,8 @@ namespace gusc::Jni
 class JGlobalRef final
 {
 public:
+    /// @brief create empty global reference to JNI object
+    JGlobalRef() = default;
     /// @brief create global reference to JNI object and wrap it
     /// @note this automatically assumes the ownership of the global reference object
     JGlobalRef(jobject initObj)
@@ -22,9 +24,17 @@ public:
     JGlobalRef& operator=(JGlobalRef&&) = default;
     ~JGlobalRef() = default;
 
+    inline operator bool() const
+    {
+        return obj;
+    }
     inline operator jobject()
     {
         return static_cast<jobject>(obj);
+    }
+    inline operator const JObject&() const
+    {
+        return obj;
     }
     inline JObject* operator->()
     {

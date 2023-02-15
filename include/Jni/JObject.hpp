@@ -16,6 +16,8 @@ class JClass;
 class JObject final
 {
 public:
+    /// @brief create empty JNI object wrapper
+    JObject() = default;
     /// @brief create new JNI object wrapper
     /// @param initObject - the jobject to wrap
     /// @param initIsOwned - whether we own this object (objects created by you, must be owned, so that they are freed on destruction)
@@ -44,6 +46,11 @@ public:
     ~JObject()
     {
         dispose();
+    }
+
+    inline operator bool() const
+    {
+        return obj != nullptr;
     }
 
     inline operator jobject() const
