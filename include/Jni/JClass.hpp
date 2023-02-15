@@ -42,9 +42,9 @@ public:
         return className;
     }
     
-    inline jmethodID getStaticMethodIdSign(const char* name, const char* signature) const
+    inline jmethodID getStaticMethodIdSign(const std::string& name, const std::string& signature) const
     {
-        auto methodId = jniEnv->GetStaticMethodID(cls, name, signature);
+        auto methodId = jniEnv->GetStaticMethodID(cls, name.c_str(), signature.c_str());
         if (!methodId)
         {
             throw std::runtime_error(std::string("Can't find static method ") + name + " with signature " + signature);
@@ -53,15 +53,15 @@ public:
     }
 
     template<typename TReturn, typename... TArgs>
-    inline jmethodID getStaticMethodId(const char* name) const
+    inline jmethodID getStaticMethodId(const std::string& name) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return getMethodId(name, sign.str);
     }
     
-    inline jmethodID getMethodIdSign(const char* name, const char* signature) const
+    inline jmethodID getMethodIdSign(const std::string& name, const std::string& signature) const
     {
-        auto methodId = jniEnv->GetMethodID(cls, name, signature);
+        auto methodId = jniEnv->GetMethodID(cls, name.c_str(), signature.c_str());
         if (!methodId)
         {
             throw std::runtime_error(std::string("Can't find instance method ") + name + " with signature " + signature);
@@ -70,15 +70,15 @@ public:
     }
 
     template<typename TReturn, typename... TArgs>
-    inline jmethodID getMethodId(const char* name) const
+    inline jmethodID getMethodId(const std::string& name) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return getMethodIdSign(name, sign.str);
     }
 
-    inline jfieldID getStaticFieldIdSign(const char* name, const char* signature) const
+    inline jfieldID getStaticFieldIdSign(const std::string& name, const std::string& signature) const
     {
-        auto fieldId = jniEnv->GetStaticFieldID(cls, name, signature);
+        auto fieldId = jniEnv->GetStaticFieldID(cls, name.c_str(), signature.c_str());
         if (!fieldId)
         {
             throw std::runtime_error(std::string("Can't find static field ") + name + " with signature " + signature);
@@ -87,15 +87,15 @@ public:
     }
 
     template<typename T>
-    inline jfieldID getStaticFieldId(const char* name) const
+    inline jfieldID getStaticFieldId(const std::string& name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getStaticFieldIdSign(name, sign.str);
     }
     
-    inline jfieldID getFieldIdSign(const char* name, const char* signature) const
+    inline jfieldID getFieldIdSign(const std::string& name, const std::string& signature) const
     {
-        auto fieldId = jniEnv->GetFieldID(cls, name, signature);
+        auto fieldId = jniEnv->GetFieldID(cls, name.c_str(), signature.c_str());
         if (!fieldId)
         {
             throw std::runtime_error(std::string("Can't find instance field ") + name + " with signature " + signature);
@@ -104,17 +104,17 @@ public:
     }
 
     template<typename T>
-    inline jfieldID getFieldId(const char* name) const
+    inline jfieldID getFieldId(const std::string& name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldIdSign(name, sign.str);
     }
 
     template<typename TReturn, typename... TArgs>
-    inline void registerNativeMethodSign(const char* name, const char* signature, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
+    inline void registerNativeMethodSign(const std::string& name, const std::string& signature, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
     {
         const JNINativeMethod methodsArray[] = {
-            {name, signature, Private::void_cast(fn)}
+            {name.c_str(), signature.c_str(), Private::void_cast(fn)}
         };
         if (jniEnv->RegisterNatives(cls, methodsArray, sizeof(methodsArray) / sizeof(methodsArray[0])) < 0)
         {
@@ -123,7 +123,7 @@ public:
     }
 
     template<typename TReturn, typename... TArgs>
-    inline void registerNativeMethod(const char* name, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
+    inline void registerNativeMethod(const std::string& name, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         registerNativeMethodSign<TReturn>(name, sign.str, fn);
@@ -141,7 +141,7 @@ public:
     }
 
     template<typename... TArgs>
-    JObject createObjectSign(const char* signature, const TArgs&... args) const
+    JObject createObjectSign(const std::string& signature, const TArgs&... args) const
     {
         const auto methodId = getMethodIdSign("<init>", signature);
         return createObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
@@ -172,7 +172,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethodSign(const char* name, const char* signature, const TArgs&... args) const
+    invokeMethodSign(const std::string& name, const std::string& signature, const TArgs&... args) const
     {
         const auto methodId = getStaticMethodIdSign(name, signature);
         invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
@@ -184,7 +184,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethod(const char* name, const TArgs&... args) const
+    invokeMethod(const std::string& name, const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
@@ -209,7 +209,7 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethodSign(const char* name, const char* signature, const TArgs&... args) const
+    invokeMethodSign(const std::string& name, const std::string& signature, const TArgs&... args) const
     {
         const auto methodId = getStaticMethodIdSign(name, signature);
         return invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
@@ -221,7 +221,7 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethod(const char* name, const TArgs&... args) const
+    invokeMethod(const std::string& name, const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
@@ -234,14 +234,14 @@ public:
     }
 
     template<typename T>
-    T getFieldSign(const char* name, const char* signature) const
+    T getFieldSign(const std::string& name, const std::string& signature) const
     {
         const auto fieldId = getStaticFieldIdSign(name, signature);
         return getFieldJni<T>(jniEnv, fieldId);
     }
 
     template<typename T>
-    T getField(const char* name) const
+    T getField(const std::string& name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldSign<T>(name, sign.str);
@@ -254,14 +254,14 @@ public:
     }
 
     template<typename T>
-    void setFieldSign(const char* name, const char* signature, const T& value)
+    void setFieldSign(const std::string& name, const std::string& signature, const T& value)
     {
         const auto fieldId = getStaticFieldIdSign(name, signature);
         setFieldJni<T>(jniEnv, fieldId, std::forward<const T&>(value));
     }
 
     template<typename T>
-    void setField(const char* name, const T& value)
+    void setField(const std::string& name, const T& value)
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
@@ -717,12 +717,12 @@ inline void JEnv::checkException(JEnv& env)
     }
 }
 
-inline jmethodID JObject::getMethodIdJni(JEnv& env, const char* name, const char* signature) const
+inline jmethodID JObject::getMethodIdJni(JEnv& env, const std::string& name, const std::string& signature) const
 {
     return getClass(env).getMethodIdSign(name, signature);
 }
 
-inline jfieldID JObject::getFieldIdJni(JEnv& env, const char* name, const char* signature) const
+inline jfieldID JObject::getFieldIdJni(JEnv& env, const std::string& name, const std::string& signature) const
 {
     return getClass(env).getFieldIdSign(name, signature);
 }

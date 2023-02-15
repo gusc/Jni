@@ -61,26 +61,26 @@ public:
         return tmp;
     }
 
-    jmethodID getMethodIdJni(JEnv& env, const char* name, const char* signature) const;
-    inline jmethodID getMethodIdSign(const char* name, const char* signature) const
+    jmethodID getMethodIdJni(JEnv& env, const std::string& name, const std::string& signature) const;
+    inline jmethodID getMethodIdSign(const std::string& name, const std::string& signature) const
     {
         auto env = JVM::getEnv();
         return getMethodIdJni(env, name, signature);
     }
     template<typename TReturn, typename... TArgs>
-    inline jmethodID getMethodId(const char* name) const noexcept
+    inline jmethodID getMethodId(const std::string& name) const noexcept
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return getMethodIdSign(name, sign.args);
     }
-    jfieldID getFieldIdJni(JEnv& env, const char* name, const char* signature) const;
-    inline jfieldID getFieldIdSign(const char* name, const char* signature) const
+    jfieldID getFieldIdJni(JEnv& env, const std::string& name, const std::string& signature) const;
+    inline jfieldID getFieldIdSign(const std::string& name, const std::string& signature) const
     {
         auto env = JVM::getEnv();
         return getFieldIdJni(env, name, signature);
     }
     template<typename T>
-    inline jfieldID getFieldId(const char* name) const noexcept
+    inline jfieldID getFieldId(const std::string& name) const noexcept
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldIdSign(name, sign.args);
@@ -106,7 +106,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethodSign(const char* name, const char* signature, const TArgs&... args) const
+    invokeMethodSign(const std::string& name, const std::string& signature, const TArgs&... args) const
     {
         auto env = JVM::getEnv();
         auto methodId = getMethodIdJni(env, name, signature);
@@ -119,7 +119,7 @@ public:
         std::is_same_v<TReturn, void>,
         void
     >
-    invokeMethod(const char* name, const TArgs&... args) const
+    invokeMethod(const std::string& name, const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
@@ -144,7 +144,7 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethodSign(const char* name, const char* signature, const TArgs&... args) const
+    invokeMethodSign(const std::string& name, const std::string& signature, const TArgs&... args) const
     {
         auto env = JVM::getEnv();
         const auto methodId = getMethodIdJni(env, name, signature);
@@ -157,7 +157,7 @@ public:
         !std::is_same_v<TReturn, void>,
         TReturn
     >
-    invokeMethod(const char* name, const TArgs&... args) const
+    invokeMethod(const std::string& name, const TArgs&... args) const
     {
         constexpr auto sign = Private::getMethodSignature<TReturn, TArgs...>();
         return invokeMethodSign<TReturn>(name, sign.str, std::forward<const TArgs&>(args)...);
@@ -170,7 +170,7 @@ public:
     }
 
     template<typename T>
-    T getFieldSign(const char* name, const char* signature) const
+    T getFieldSign(const std::string& name, const std::string& signature) const
     {
         auto env = JVM::getEnv();
         const auto fieldId = getFieldIdJni(env, name, signature);
@@ -178,7 +178,7 @@ public:
     }
 
     template<typename T>
-    T getField(const char* name) const
+    T getField(const std::string& name) const
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         return getFieldSign<T>(name, sign.str);
@@ -191,7 +191,7 @@ public:
     }
 
     template<typename T>
-    void setFieldSign(const char* name, const char* signature, const T& value)
+    void setFieldSign(const std::string& name, const std::string& signature, const T& value)
     {
         auto env = JVM::getEnv();
         const auto fieldId = getFieldIdJni(env, name, signature);
@@ -199,7 +199,7 @@ public:
     }
 
     template<typename T>
-    void setField(const char* name, const T& value)
+    void setField(const std::string& name, const T& value)
     {
         constexpr auto sign = Private::getJTypeSignature<T>();
         setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
