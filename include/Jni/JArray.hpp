@@ -15,13 +15,18 @@ public:
     JArray(JEnv env, TJni initArray)
         : array(initArray)
     {
-        if (array)
-        {
-            length = env->GetArrayLength(array);
-            dataPtr = getDataPtr<TJni>(env);
-        }
+        init(env);
     }
-    JArray(TJni initArray) : JArray(JVM::getEnv(), initArray)
+    JArray(TJni initArray)
+        : JArray(JVM::getEnv(), initArray)
+    {}
+    JArray(JEnv env, std::size_t initSize)
+    {
+        create<TJni>(env, initSize);
+        init(env);
+    }
+    JArray(std::size_t initSize)
+        : JArray(JVM::getEnv(), initSize)
     {}
     JArray(const JArray<TCpp>& other) = delete;
     JArray& operator = (const JArray<TCpp>& other) = delete;
@@ -145,6 +150,65 @@ private:
     std::size_t length { 0 };
     TJni array { nullptr };
     TJniEl* dataPtr { nullptr };
+
+    void init(JEnv env)
+    {
+        if (array)
+        {
+            length = env->GetArrayLength(array);
+            dataPtr = getDataPtr<TJni>(env);
+        }
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jbyteArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewByteArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jshortArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewShortArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jintArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewIntArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jlongArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewLongArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jfloatArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewFloatArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jdoubleArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewDoubleArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jbooleanArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        array = env->NewBooleanArray(static_cast<jsize>(initSize));
+    }
 
     void dispose()
     {

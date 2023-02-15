@@ -187,7 +187,8 @@ Methods:
 
 ## TODO
 
-1. Propper container (JString, JArray) tests
-2. Global references for containers (rething the global references in general and define stricter rules)
-3. Signature generator for JObject, maybe non-type template parameters can be used to achieve the constexpr generation
-4. Exception marshalling from C++ to Java
+1. Proper container (JString, JArray) tests
+2. Global references for containers (rethink the global references in general and define stricter rules)
+3. Signature generator for JObject, maybe non-type template parameters can be used to achieve the constexpr generation or be able to gracefully fall back to runtime generation when JObject is passed
+4. Also be able to forward JObject, JString etc. objects as arguments with internal cast to jobject and jstring respectively (currently all of them are just forwarded which won't work)
+5. Exception marshalling from C++ to Java
