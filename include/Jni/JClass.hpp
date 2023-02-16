@@ -711,8 +711,8 @@ inline void JEnv::checkException(JEnv& env)
     if (env->ExceptionCheck() == JNI_TRUE)
     {
         auto ex = JObject(static_cast<jobject>(env->ExceptionOccurred()));
-        auto message = ex.invokeMethod<JString>("getMessage");
         env->ExceptionClear();
+        auto message = ex.invokeMethod<JString>("getMessage");
         throw std::runtime_error(std::string("JNI Exception occured: ") + static_cast<std::string>(message));
     }
 }
