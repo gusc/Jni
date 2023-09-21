@@ -77,6 +77,16 @@ public:
 
     template<typename T=TJni>
     static inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, TJni>
+    createFrom(JEnv env, const TCpp& vector)
+    {
+        TJni a = env->NewCharArray(vector.size());
+        env->SetCharArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
+        return a;
+    }
+
+    template<typename T=TJni>
+    static inline
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, TJni>
     createFrom(JEnv env, const TCpp& vector)
     {
@@ -164,6 +174,13 @@ private:
     }
     template<typename T>
     inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        jniArray = env->NewCharArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, void>
     create(JEnv env, std::size_t initSize)
     {
@@ -214,6 +231,14 @@ private:
             length = 0;
             dataPtr = nullptr;
         }
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, TJniEl*>
+    getDataPtr(JEnv& env)
+    {
+        return env->GetCharArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -282,6 +307,14 @@ private:
 
     template<typename T>
     inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, void>
+    freeDataPtr(JEnv& env)
+    {
+        env->ReleaseCharArrayElements(jniArray, dataPtr, JNI_ABORT);
+    }
+
+    template<typename T>
+    inline
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, void>
     freeDataPtr(JEnv& env)
     {
@@ -331,12 +364,16 @@ private:
 };
 
 using JByteArray = JArray<>;
+using JCharArray = JArray<std::vector<char>, jcharArray, jchar>;
 using JShortArray = JArray<std::vector<std::int16_t>, jshortArray, jshort>;
 using JIntArray = JArray<std::vector<std::int32_t>, jintArray, jint>;
 using JLongArray = JArray<std::vector<std::int64_t>, jlongArray, jlong>;
 using JFloatArray = JArray<std::vector<float>, jfloatArray, jfloat>;
 using JDoubleArray = JArray<std::vector<double>, jdoubleArray, jdouble>;
-using JBooleanArray = JArray<std::vector<bool>, jbooleanArray, jboolean>;
+// Can't use std::vector<bool> as it's a bitset not an array
+using JBooleanArray = JArray<std::vector<char>, jbooleanArray, jboolean>;
+// JObjectArray will probably need it's own class, because it depends on the element class
+//using JObjectArray = JArray<std::vector<JObject>, jobjectArray , jobject>;
 
 }
 

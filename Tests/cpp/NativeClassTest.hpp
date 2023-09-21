@@ -125,7 +125,82 @@ public:
 
     jstring nativeStringMethod(jstring val)
     {
-        //JString tmp = JString::createFrom(static_cast<std::string>(i));
+        // TODO: implement reference copies in C++
+//        JString tmp = i;
+//        i = val;
+//        return static_cast<jstring>(tmp);
+        return val;
+    }
+
+    jbooleanArray nativeBooleanArrayMethod(jbooleanArray val)
+    {
+//        JBooleanArray tmp = j;
+//        j = val;
+//        return static_cast<jbooleanArray>(tmp);
+        return val;
+    }
+
+    jbyteArray nativeByteArrayMethod(jbyteArray val)
+    {
+//        JByteArray tmp = k;
+//        k = val;
+//        return static_cast<jbyteArray>(tmp);
+        return val;
+    }
+
+    jcharArray nativeCharArrayMethod(jcharArray val)
+    {
+//        JCharArray tmp = l;
+//        l = val;
+//        return static_cast<jcharArray>(tmp);
+        return val;
+    }
+
+    jshortArray nativeShortArrayMethod(jshortArray val)
+    {
+//        JShortArray tmp = m;
+//        m = val;
+//        return static_cast<jshortArray>(tmp);
+        return val;
+    }
+
+    jintArray nativeIntArrayMethod(jintArray val)
+    {
+//        JIntArray tmp = n;
+//        n = val;
+//        return static_cast<jintArray>(tmp);
+        return val;
+    }
+
+    jlongArray nativeLongArrayMethod(jlongArray val)
+    {
+//        JLongArray tmp = o;
+//        o = val;
+//        return static_cast<jlongArray>(tmp);
+        return val;
+    }
+
+    jfloatArray nativeFloatArrayMethod(jfloatArray val)
+    {
+//        JFloatArray tmp = p;
+//        p = val;
+//        return static_cast<jfloatArray>(tmp);
+        return val;
+    }
+
+    jdoubleArray nativeDoubleArrayMethod(jdoubleArray val)
+    {
+//        JDoubleArray tmp = q;
+//        q = val;
+//        return static_cast<jdoubleArray>(q);
+        return val;
+    }
+
+    jobjectArray nativeObjectArrayMethod(jobjectArray val)
+    {
+//        JObjectArray tmp = q;
+//        q = val;
+//        return static_cast<jobjectArray>(q);
         return val;
     }
 
@@ -144,6 +219,14 @@ public:
         cls.registerNativeMethod("nativeFloatMethod", &NativeClassTest::nativeFloatMethodJni);
         cls.registerNativeMethod("nativeDoubleMethod", &NativeClassTest::nativeDoubleMethodJni);
         cls.registerNativeMethod("nativeStringMethod", &NativeClassTest::nativeStringMethodJni);
+        cls.registerNativeMethod("nativeBooleanArrayMethod", &NativeClassTest::nativeBooleanArrayMethodJni);
+        cls.registerNativeMethod("nativeByteArrayMethod", &NativeClassTest::nativeByteArrayMethodJni);
+        cls.registerNativeMethod("nativeCharArrayMethod", &NativeClassTest::nativeCharArrayMethodJni);
+        cls.registerNativeMethod("nativeShortArrayMethod", &NativeClassTest::nativeShortArrayMethodJni);
+        cls.registerNativeMethod("nativeIntArrayMethod", &NativeClassTest::nativeIntArrayMethodJni);
+        cls.registerNativeMethod("nativeLongArrayMethod", &NativeClassTest::nativeLongArrayMethodJni);
+        cls.registerNativeMethod("nativeFloatArrayMethod", &NativeClassTest::nativeFloatArrayMethodJni);
+        cls.registerNativeMethod("nativeDoubleArrayMethod", &NativeClassTest::nativeDoubleArrayMethodJni);
     }
 private:
     JGlobalRef objRef;
@@ -156,6 +239,14 @@ private:
     jfloat g { 1.f };
     jdouble h { 2.0 };
     JString i { JString::createFrom("asdf") };
+    JBooleanArray j { JBooleanArray::createFrom({ false, true, true, false }) };
+    JByteArray k { JByteArray::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
+    JCharArray l = { JCharArray::createFrom({ 'd', 'c', 'b', 'a' }) };
+    JShortArray m = { JShortArray ::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
+    JIntArray n = { JIntArray::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
+    JLongArray o = { JLongArray::createFrom({ 1234567890, 1234567891, 1234567892, 1234567893 }) };
+    JFloatArray p = { JFloatArray::createFrom({ 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f }) };
+    JDoubleArray q = { JDoubleArray::createFrom({ 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0 }) };
 
     static void nativeVoidMethodNoArgsJni(JNIEnv*, jobject thiz)
     {
@@ -211,6 +302,46 @@ private:
     {
         auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeStringMethod(val);
+    }
+    static jbooleanArray nativeBooleanArrayMethodJni(JNIEnv*, jobject thiz, jbooleanArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeBooleanArrayMethod(val);
+    }
+    static jbyteArray nativeByteArrayMethodJni(JNIEnv*, jobject thiz, jbyteArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeByteArrayMethod(val);
+    }
+    static jcharArray nativeCharArrayMethodJni(JNIEnv*, jobject thiz, jcharArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeCharArrayMethod(val);
+    }
+    static jshortArray nativeShortArrayMethodJni(JNIEnv*, jobject thiz, jshortArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeShortArrayMethod(val);
+    }
+    static jintArray nativeIntArrayMethodJni(JNIEnv*, jobject thiz, jintArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeIntArrayMethod(val);
+    }
+    static jlongArray nativeLongArrayMethodJni(JNIEnv*, jobject thiz, jlongArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeLongArrayMethod(val);
+    }
+    static jfloatArray nativeFloatArrayMethodJni(JNIEnv*, jobject thiz, jfloatArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeFloatArrayMethod(val);
+    }
+    static jdoubleArray nativeDoubleArrayMethodJni(JNIEnv*, jobject thiz, jdoubleArray val)
+    {
+        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        return ptr->nativeDoubleArrayMethod(val);
     }
 };
 

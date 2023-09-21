@@ -24,6 +24,14 @@ public class NativeClassTest {
         float g = 1.5f;
         double h = 2.3;
         String i = "asdf";
+        boolean[] j = {false, true};
+        byte[] k = {0, 1, 2, 3, 4, 5, 6, 7};
+        char[] l = {'a', 'b', 'c', 'd'};
+        short[] m = {0, 1, 2, 3, 4, 5, 6, 7};
+        int[] n = {0, 1, 2, 3, 4, 5, 6, 7};
+        long[] o = {0, 1, 2, 3, 4, 5, 6, 7};
+        float[] p = {0, 1, 2, 3, 4, 5, 6, 7};
+        double[] q = {0, 1, 2, 3, 4, 5, 6, 7};
 
         nativeVoidMethodNoArgs();
         a = nativeBooleanMethod(a);
@@ -35,6 +43,14 @@ public class NativeClassTest {
         g = nativeFloatMethod(g);
         h = nativeDoubleMethod(h);
         i = nativeStringMethod(i);
+        j = nativeBooleanArrayMethod(j);
+        k = nativeByteArrayMethod(k);
+        l = nativeCharArrayMethod(l);
+        m = nativeShortArrayMethod(m);
+        n = nativeIntArrayMethod(n);
+        o = nativeLongArrayMethod(o);
+        p = nativeFloatArrayMethod(p);
+        q = nativeDoubleArrayMethod(q);
         nativeVoidMethod(a, b, c, d, e, f, g, h , i);
     }
 
@@ -49,4 +65,13 @@ public class NativeClassTest {
     native float nativeFloatMethod(float val);
     native double nativeDoubleMethod(double val);
     native String nativeStringMethod(String val);
+    native boolean[] nativeBooleanArrayMethod(boolean[] val);
+    native byte[] nativeByteArrayMethod(byte[] val);
+    native char[] nativeCharArrayMethod(char[] val);
+    native short[] nativeShortArrayMethod(short[] val);
+    native int[] nativeIntArrayMethod(int[] val);
+    native long[] nativeLongArrayMethod(long[] val);
+    native float[] nativeFloatArrayMethod(float[] val);
+    native double[] nativeDoubleArrayMethod(double[] val);
+
 }
