@@ -13,7 +13,7 @@ class JArray
 {
 public:
     JArray(JEnv env, TJni initArray)
-        : array(initArray)
+        : jniArray(initArray)
     {
         init(env);
     }
@@ -34,14 +34,10 @@ public:
     JArray& operator=(JArray&& other)
     {
         dispose();
-        isCopy = other.isCopy;
-        length = other.length;
-        array = other.array;
-        dataPtr = other.dataPtr;
-        other.isCopy = JNI_FALSE;
-        other.length = 0;
-        other.array = nullptr;
-        other.dataPtr = nullptr;
+        jniArray = nullptr;
+        std::swap(jniArray, other.jniArray);
+        std::swap(length, other.length);
+        std::swap(dataPtr, other.dataPtr);
         return *this;
     }
     ~JArray()
@@ -58,11 +54,11 @@ public:
     }
     inline operator TJni()
     {
-        return array;
+        return jniArray;
     }
     inline operator TJni() const
     {
-        return array;
+        return jniArray;
     }
     inline TJniEl* data()
     {
@@ -76,6 +72,16 @@ public:
     {
         TJni a = env->NewByteArray(vector.size());
         env->SetByteArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
+        return a;
+    }
+
+    template<typename T=TJni>
+    static inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, TJni>
+    createFrom(JEnv env, const TCpp& vector)
+    {
+        TJni a = env->NewCharArray(vector.size());
+        env->SetCharArrayRegion(a, 0, vector.size(), reinterpret_cast<const TJniEl*>(vector.data()));
         return a;
     }
 
@@ -146,16 +152,15 @@ public:
     }
 
 private:
-    jboolean isCopy { JNI_FALSE };
     std::size_t length { 0 };
-    TJni array { nullptr };
+    TJni jniArray { nullptr };
     TJniEl* dataPtr { nullptr };
 
     void init(JEnv env)
     {
-        if (array)
+        if (jniArray)
         {
-            length = env->GetArrayLength(array);
+            length = env->GetArrayLength(jniArray);
             dataPtr = getDataPtr<TJni>(env);
         }
     }
@@ -165,58 +170,75 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jbyteArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewByteArray(static_cast<jsize>(initSize));
+        jniArray = env->NewByteArray(static_cast<jsize>(initSize));
+    }
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, void>
+    create(JEnv env, std::size_t initSize)
+    {
+        jniArray = env->NewCharArray(static_cast<jsize>(initSize));
     }
     template<typename T>
     inline
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewShortArray(static_cast<jsize>(initSize));
+        jniArray = env->NewShortArray(static_cast<jsize>(initSize));
     }
     template<typename T>
     inline
     typename std::enable_if_t<std::is_same_v<T, jintArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewIntArray(static_cast<jsize>(initSize));
+        jniArray = env->NewIntArray(static_cast<jsize>(initSize));
     }
     template<typename T>
     inline
     typename std::enable_if_t<std::is_same_v<T, jlongArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewLongArray(static_cast<jsize>(initSize));
+        jniArray = env->NewLongArray(static_cast<jsize>(initSize));
     }
     template<typename T>
     inline
     typename std::enable_if_t<std::is_same_v<T, jfloatArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewFloatArray(static_cast<jsize>(initSize));
+        jniArray = env->NewFloatArray(static_cast<jsize>(initSize));
     }
     template<typename T>
     inline
     typename std::enable_if_t<std::is_same_v<T, jdoubleArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewDoubleArray(static_cast<jsize>(initSize));
+        jniArray = env->NewDoubleArray(static_cast<jsize>(initSize));
     }
     template<typename T>
     inline
     typename std::enable_if_t<std::is_same_v<T, jbooleanArray>, void>
     create(JEnv env, std::size_t initSize)
     {
-        array = env->NewBooleanArray(static_cast<jsize>(initSize));
+        jniArray = env->NewBooleanArray(static_cast<jsize>(initSize));
     }
 
     void dispose()
     {
-        if (array && isCopy == JNI_TRUE)
+        if (jniArray && dataPtr)
         {
             auto env = JVM::getEnv();
             freeDataPtr<TJni>(env);
+            length = 0;
+            dataPtr = nullptr;
         }
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, TJniEl*>
+    getDataPtr(JEnv& env)
+    {
+        return env->GetCharArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -224,7 +246,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jbyteArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetByteArrayElements(array, &isCopy);
+        return env->GetByteArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -232,7 +254,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetShortArrayElements(array, &isCopy);
+        return env->GetShortArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -240,7 +262,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jintArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetIntArrayElements(array, &isCopy);
+        return env->GetIntArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -248,7 +270,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jlongArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetLongArrayElements(array, &isCopy);
+        return env->GetLongArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -256,7 +278,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jfloatArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetFloatArrayElements(array, &isCopy);
+        return env->GetFloatArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -264,7 +286,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jdoubleArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetDoubleArrayElements(array, &isCopy);
+        return env->GetDoubleArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -272,7 +294,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jbooleanArray>, TJniEl*>
     getDataPtr(JEnv& env)
     {
-        return env->GetBooleanArrayElements(array, &isCopy);
+        return env->GetBooleanArrayElements(jniArray, nullptr);
     }
 
     template<typename T>
@@ -280,7 +302,15 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jbyteArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseByteArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseByteArrayElements(jniArray, dataPtr, JNI_ABORT);
+    }
+
+    template<typename T>
+    inline
+    typename std::enable_if_t<std::is_same_v<T, jcharArray>, void>
+    freeDataPtr(JEnv& env)
+    {
+        env->ReleaseCharArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
     template<typename T>
@@ -288,7 +318,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jshortArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseShortArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseShortArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
     template<typename T>
@@ -296,7 +326,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jintArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseIntArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseIntArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
     template<typename T>
@@ -304,7 +334,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jlongArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseLongArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseLongArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
     template<typename T>
@@ -312,7 +342,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jfloatArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseFloatArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseFloatArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
     template<typename T>
@@ -320,7 +350,7 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jdoubleArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseDoubleArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseDoubleArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
     template<typename T>
@@ -328,18 +358,22 @@ private:
     typename std::enable_if_t<std::is_same_v<T, jbooleanArray>, void>
     freeDataPtr(JEnv& env)
     {
-        env->ReleaseBooleanArrayElements(array, dataPtr, JNI_ABORT);
+        env->ReleaseBooleanArrayElements(jniArray, dataPtr, JNI_ABORT);
     }
 
 };
 
 using JByteArray = JArray<>;
+using JCharArray = JArray<std::vector<char>, jcharArray, jchar>;
 using JShortArray = JArray<std::vector<std::int16_t>, jshortArray, jshort>;
 using JIntArray = JArray<std::vector<std::int32_t>, jintArray, jint>;
 using JLongArray = JArray<std::vector<std::int64_t>, jlongArray, jlong>;
 using JFloatArray = JArray<std::vector<float>, jfloatArray, jfloat>;
 using JDoubleArray = JArray<std::vector<double>, jdoubleArray, jdouble>;
-using JBooleanArray = JArray<std::vector<bool>, jbooleanArray, jboolean>;
+// Can't use std::vector<bool> as it's a bitset not an array
+using JBooleanArray = JArray<std::vector<char>, jbooleanArray, jboolean>;
+// JObjectArray will probably need it's own class, because it depends on the element class
+//using JObjectArray = JArray<std::vector<JObject>, jobjectArray , jobject>;
 
 }
 

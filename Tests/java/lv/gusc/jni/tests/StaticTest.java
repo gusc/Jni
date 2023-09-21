@@ -13,6 +13,14 @@ public class StaticTest {
     public static float floatField = 1.5f;
     public static double doubleField = 2.3;
     public static String stringField = "asdf";
+    public static boolean[] booleanArrayField = {false, true};
+    public static byte[] byteArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static char[] charArrayField = {'a', 'b', 'c', 'd'};
+    public static short[] shortArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static int[] intArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static long[] longArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static float[] floatArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static double[] doubleArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
 
     @Keep
     static void voidMethodNoArgs() {
@@ -76,6 +84,47 @@ public class StaticTest {
         return stringField;
     }
 
+
+    @Keep
+    static boolean[] getBooleanArray() {
+        return booleanArrayField;
+    }
+
+    @Keep
+    static byte[] getByteArray() {
+        return byteArrayField;
+    }
+
+    @Keep
+    static char[] getCharArray() {
+        return charArrayField;
+    }
+
+    @Keep
+    static short[] getShortArray() {
+        return shortArrayField;
+    }
+
+    @Keep
+    static int[] getIntArray() {
+        return intArrayField;
+    }
+
+    @Keep
+    static long[] getLongArray() {
+        return longArrayField;
+    }
+
+    @Keep
+    static float[] getFloatArray() {
+        return floatArrayField;
+    }
+
+    @Keep
+    static double[] getDoubleArray() {
+        return doubleArrayField;
+    }
+
     @Keep
     static void setBoolean(boolean val) {
         booleanField = val;
@@ -119,5 +168,41 @@ public class StaticTest {
     @Keep
     static void setString(String val) {
         stringField = val;
+    }
+
+    @Keep
+    static void setBooleanArray(boolean[] val) {
+        booleanArrayField = val;
+    }
+
+    @Keep
+    static void setByteArray(byte[] val) {
+        byteArrayField = val;
+    }
+
+    @Keep
+    static void setCharArray(char[] val) {
+        charArrayField = val;
+    }
+
+    @Keep
+    static void setShortArray(short[] val) {
+        shortArrayField = val;
+    }
+    @Keep
+    static void setIntArray(int[] val) {
+        intArrayField = val;
+    }
+    @Keep
+    static void setLongArray(long[] val) {
+        longArrayField = val;
+    }
+    @Keep
+    static void setFloatArray(float[] val) {
+        floatArrayField = val;
+    }
+    @Keep
+    static void setDoubleArray(double[] val) {
+        doubleArrayField = val;
     }
 }

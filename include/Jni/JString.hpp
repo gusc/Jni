@@ -14,12 +14,12 @@ class JString
 {
 public:
     JString(JEnv env, const jstring& initString)
-            : string(initString)
+            : jniString(initString)
     {
-        if (string)
+        if (jniString)
         {
-            length = env->GetStringUTFLength(string);
-            dataPtr = env->GetStringUTFChars(string, &isCopy);
+            length = env->GetStringUTFLength(jniString);
+            dataPtr = env->GetStringUTFChars(jniString, nullptr);
         }
     }
     JString(const jstring& initString) : JString(JVM::getEnv(), initString)
@@ -30,14 +30,10 @@ public:
     JString& operator=(JString&& other)
     {
         dispose();
-        isCopy = other.isCopy;
-        length = other.length;
-        string = other.string;
-        dataPtr = other.dataPtr;
-        other.isCopy = JNI_FALSE;
-        other.length = 0;
-        other.string = nullptr;
-        other.dataPtr = nullptr;
+        jniString = nullptr;
+        std::swap(jniString, other.jniString);
+        std::swap(length, other.length);
+        std::swap(dataPtr, other.dataPtr);
         return *this;
     }
     ~JString()
@@ -54,11 +50,11 @@ public:
     }
     operator jstring()
     {
-        return string;
+        return jniString;
     }
     operator jstring() const
     {
-        return string;
+        return jniString;
     }
     inline const char* data()
     {
@@ -76,17 +72,18 @@ public:
     }
 
 private:
-    jboolean isCopy { JNI_FALSE };
     std::size_t length { 0 };
-    jstring string { nullptr };
+    jstring jniString { nullptr };
     const char* dataPtr { nullptr };
 
     void dispose()
     {
-        if (string && isCopy == JNI_TRUE)
+        if (jniString && dataPtr)
         {
             auto env = JVM::getEnv();
-            env->ReleaseStringUTFChars(string, dataPtr);
+            env->ReleaseStringUTFChars(jniString, dataPtr);
+            dataPtr = nullptr;
+            length = 0;
         }
     }
 };

@@ -13,6 +13,13 @@ namespace gusc::Jni
 
 class JClass;
 
+// TODO:
+// 1. make JArray and JString objects extend from JObject
+// 2. drop current ownership in favor of always creating a reference copy
+// 3. make it possible to copy objects taking into account their reference type (global, local, weak)
+// note: maybe 2&3 can be somehow combined with some optimization for when creating object from raw
+//       jtype we do not copy reference, but if we copy from JObject to another then we do
+// 4. instead of JGlobalRef create method in JObject to create global or weak references that just copies the object
 class JObject final
 {
 public:
@@ -340,12 +347,21 @@ protected:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-            std::is_same_v<TReturn, jstring>,
+            !std::is_same_v<TReturn, jboolean> &&
+            !std::is_same_v<TReturn, jbyte> &&
+            !std::is_same_v<TReturn, jchar> &&
+            !std::is_same_v<TReturn, jshort> &&
+            !std::is_same_v<TReturn, jint> &&
+            !std::is_same_v<TReturn, jlong> &&
+            !std::is_same_v<TReturn, jfloat> &&
+            !std::is_same_v<TReturn, jdouble> &&
+            !std::is_same_v<TReturn, JString> &&
+            !std::is_same_v<TReturn, JObject>,
             TReturn
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return static_cast<jstring>(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return static_cast<TReturn>(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -362,23 +378,12 @@ protected:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-        std::is_same_v<TReturn, jobject>,
-        TReturn
-    >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
-    {
-        return env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...);
-    }
-
-    template<typename TReturn, typename... TArgs>
-    inline
-    typename std::enable_if_t<
         std::is_same_v<TReturn, JObject>,
         TReturn
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return JObject(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return JObject(invokeMethodReturn<jobject>(env, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename T>
@@ -472,12 +477,21 @@ protected:
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, jstring>,
+        !std::is_same_v<T, jboolean> &&
+        !std::is_same_v<T, jbyte> &&
+        !std::is_same_v<T, jchar> &&
+        !std::is_same_v<T, jshort> &&
+        !std::is_same_v<T, jint> &&
+        !std::is_same_v<T, jlong> &&
+        !std::is_same_v<T, jfloat> &&
+        !std::is_same_v<T, jdouble> &&
+        !std::is_same_v<T, JString> &&
+        !std::is_same_v<T, JObject>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return static_cast<jstring>(env->GetObjectField(obj, fieldId));
+        return static_cast<T>(env->GetObjectField(obj, fieldId));
     }
 
     template<typename T>
@@ -494,41 +508,12 @@ protected:
     template<typename T>
     inline
     typename std::enable_if_t<
-        std::is_same_v<T, jobject>,
-        T
-    >
-    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
-    {
-        return env->GetObjectField(obj, fieldId);
-    }
-
-    template<typename T>
-    inline
-    typename std::enable_if_t<
         std::is_same_v<T, JObject>,
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
         return JObject(getFieldValue<jobject>(env, fieldId), true);
-    }
-
-    template<typename T>
-    inline
-    typename std::enable_if_t<
-            std::is_same_v<T, jbyteArray> ||
-            std::is_same_v<T, jcharArray> ||
-            std::is_same_v<T, jshortArray> ||
-            std::is_same_v<T, jintArray> ||
-            std::is_same_v<T, jlongArray> ||
-            std::is_same_v<T, jfloatArray> ||
-            std::is_same_v<T, jdoubleArray> ||
-            std::is_same_v<T, jobjectArray>,
-            T
-    >
-    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
-    {
-        return static_cast<T>(getFieldValue<jobject>(env, fieldId));
     }
 
     template<typename T>
@@ -614,9 +599,16 @@ protected:
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  std::is_same_v<T, jstring> ||
-                                  std::is_same_v<T, jobject> ||
-                                  std::is_same_v<T, JObject>,
+                                  !std::is_same_v<T, jboolean> &&
+                                  !std::is_same_v<T, jbyte> &&
+                                  !std::is_same_v<T, jchar> &&
+                                  !std::is_same_v<T, jshort> &&
+                                  !std::is_same_v<T, jint> &&
+                                  !std::is_same_v<T, jlong> &&
+                                  !std::is_same_v<T, jfloat> &&
+                                  !std::is_same_v<T, jdouble> &&
+                                  !std::is_same_v<T, JObject> &&
+                                  !std::is_same_v<T, JString>,
                                   const T&
                               > value) noexcept
     {
@@ -636,14 +628,7 @@ protected:
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                      std::is_same_v<T, jbyteArray> ||
-                                      std::is_same_v<T, jcharArray> ||
-                                      std::is_same_v<T, jshortArray> ||
-                                      std::is_same_v<T, jintArray> ||
-                                      std::is_same_v<T, jlongArray> ||
-                                      std::is_same_v<T, jfloatArray> ||
-                                      std::is_same_v<T, jdoubleArray> ||
-                                      std::is_same_v<T, jobjectArray>,
+                                      std::is_same_v<T, JObject>,
                                       const T&
                               > value) noexcept
     {

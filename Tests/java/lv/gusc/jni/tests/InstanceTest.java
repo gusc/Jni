@@ -13,13 +13,22 @@ public class InstanceTest {
     public float floatField = 1.5f;
     public double doubleField = 2.3;
     public String stringField = "asdf";
+    public boolean[] booleanArrayField = {false, true};
+    public byte[] byteArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public char[] charArrayField = {'a', 'b', 'c', 'd'};
+    public short[] shortArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public int[] intArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public long[] longArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public float[] floatArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public double[] doubleArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
 
     @Keep
     InstanceTest() {
     }
 
     @Keep
-    InstanceTest(boolean a, byte b, char c, short d, int e, long f, float g, double h, String i) {
+    InstanceTest(boolean a, byte b, char c, short d, int e, long f, float g, double h, String i,
+                 boolean[] j, byte[] k, char[] l, short[] m, int[] n, long[] o, float[] p, double[] q) {
         booleanField = a;
         byteField = b;
         charField = c;
@@ -29,6 +38,14 @@ public class InstanceTest {
         floatField = g;
         doubleField = h;
         stringField = i;
+        booleanArrayField = j;
+        byteArrayField = k;
+        charArrayField = l;
+        shortArrayField = m;
+        intArrayField = n;
+        longArrayField = o;
+        floatArrayField = p;
+        doubleArrayField = q;
     }
 
     @Keep
@@ -94,6 +111,46 @@ public class InstanceTest {
     }
 
     @Keep
+    boolean[] getBooleanArray() {
+        return booleanArrayField;
+    }
+
+    @Keep
+    byte[] getByteArray() {
+        return byteArrayField;
+    }
+
+    @Keep
+    char[] getCharArray() {
+        return charArrayField;
+    }
+
+    @Keep
+    short[] getShortArray() {
+        return shortArrayField;
+    }
+
+    @Keep
+    int[] getIntArray() {
+        return intArrayField;
+    }
+
+    @Keep
+    long[] getLongArray() {
+        return longArrayField;
+    }
+
+    @Keep
+    float[] getFloatArray() {
+        return floatArrayField;
+    }
+
+    @Keep
+    double[] getDoubleArray() {
+        return doubleArrayField;
+    }
+
+    @Keep
     void setBoolean(boolean val) {
         booleanField = val;
     }
@@ -136,5 +193,41 @@ public class InstanceTest {
     @Keep
     void setString(String val) {
         stringField = val;
+    }
+
+    @Keep
+    void setBooleanArray(boolean[] val) {
+        booleanArrayField = val;
+    }
+
+    @Keep
+    void setByteArray(byte[] val) {
+        byteArrayField = val;
+    }
+
+    @Keep
+    void setCharArray(char[] val) {
+        charArrayField = val;
+    }
+
+    @Keep
+    void setShortArray(short[] val) {
+        shortArrayField = val;
+    }
+    @Keep
+    void setIntArray(int[] val) {
+        intArrayField = val;
+    }
+    @Keep
+    void setLongArray(long[] val) {
+        longArrayField = val;
+    }
+    @Keep
+    void setFloatArray(float[] val) {
+        floatArrayField = val;
+    }
+    @Keep
+    void setDoubleArray(double[] val) {
+        doubleArrayField = val;
     }
 }
