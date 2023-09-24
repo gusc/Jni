@@ -137,7 +137,7 @@ public:
         {
             throw std::runtime_error(std::string("Failed to reate Java object "));
         }
-        return JObject(obj, true);
+        return static_cast<JObject>(obj);
     }
 
     template<typename... TArgs>
@@ -539,7 +539,7 @@ private:
         T
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept {
-        return JObject(getFieldValue<jobject>(env, fieldId), true);
+        return static_cast<JObject>(getFieldValue<jobject>(env, fieldId));
     }
 
     template<typename T>

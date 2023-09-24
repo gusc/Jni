@@ -16,7 +16,7 @@ public:
     /// @brief create global reference to JNI object and wrap it
     /// @note this automatically assumes the ownership of the global reference object
     JGlobalRef(jobject initObj)
-        : obj(JVM::getEnv()->NewGlobalRef(initObj), true)
+        : obj(static_cast<JObject>(initObj).createGlobalRef())
     {}
     JGlobalRef(const JGlobalRef&) = delete;
     JGlobalRef& operator=(const JGlobalRef&) = delete;

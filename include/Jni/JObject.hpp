@@ -25,34 +25,87 @@ class JObject final
 public:
     /// @brief create empty JNI object wrapper
     JObject() = default;
-    /// @brief create new JNI object wrapper
-    /// @param initObject - the jobject to wrap
-    /// @param initIsOwned - whether we own this object (objects created by you, must be owned, so that they are freed on destruction)
-    JObject(const jobject& initObject, bool initIsOwned = false)
-        : obj(initObject)
-        , isOwned(initIsOwned)
-    {}
-    JObject(const JObject& other) = delete;
-    JObject& operator=(const JObject& other) = delete;
+    explicit JObject(const jobject& initObject)
+    {
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
+        {
+            obj = env->NewLocalRef(initObject);
+        }
+        else if (env->GetObjectRefType(initObject) == JNIWeakGlobalRefType)
+        {
+            obj = env->NewWeakGlobalRef(initObject);
+        }
+        else
+        {
+            obj = env->NewGlobalRef(initObject);
+        }
+    }
+    JObject(const JObject& other)
+    {
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(other.obj) == JNIGlobalRefType)
+        {
+            obj = env->NewLocalRef(other.obj);
+        }
+        else if (env->GetObjectRefType(other.obj) == JNIWeakGlobalRefType)
+        {
+            obj = env->NewWeakGlobalRef(other.obj);
+        }
+        else
+        {
+            obj = env->NewGlobalRef(other.obj);
+        }
+    }
+    JObject& operator=(const JObject& other)
+    {
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(other.obj) == JNIGlobalRefType)
+        {
+            obj = env->NewLocalRef(other.obj);
+        }
+        else if (env->GetObjectRefType(other.obj) == JNIWeakGlobalRefType)
+        {
+            obj = env->NewWeakGlobalRef(other.obj);
+        }
+        else
+        {
+            obj = env->NewGlobalRef(other.obj);
+        }
+        return *this;
+    }
     JObject(JObject&& other)
         : obj(other.obj)
-        , isOwned(other.isOwned)
     {
-        other.obj = nullptr;
-        other.isOwned = false;
+        std::swap(obj, other.obj);
     }
     JObject& operator=(JObject&& other)
     {
         dispose();
-        obj = other.obj;
-        isOwned = other.isOwned;
-        other.obj = nullptr;
-        other.isOwned = false;
+        std::swap(obj, other.obj);
         return *this;
     }
     ~JObject()
     {
         dispose();
+    }
+
+    /// @brief Create a copy of this object with reference type of global ref
+    JObject createGlobalRef() const
+    {
+        auto env = JVM::getEnv();
+        JObject other;
+        other.obj = env->NewGlobalRef(obj);
+        return other;
+    }
+
+    /// @brief Create a copy of this object with reference type of weak global ref
+    JObject createWeakGlobalRef() const
+    {
+        auto env = JVM::getEnv();
+        JObject other;
+        other.obj = env->NewWeakGlobalRef(obj);
+        return other;
     }
 
     inline operator bool() const
@@ -65,13 +118,12 @@ public:
         return obj;
     }
 
-    /// @brief Release the wrapped object. If it was owned, it's ownership is also released.
-    /// @note Use this method to return an object from native method
+    /// @brief Release the wrapped object.
+    /// @note Use this method to return an object from native method without it being destroyed by RAII
     inline jobject release()
     {
-        auto tmp = obj;
-        obj = nullptr;
-        isOwned = false;
+        jobject tmp { nullptr };
+        std::swap(obj, tmp);
         return tmp;
     }
 
@@ -221,11 +273,10 @@ public:
 
 protected:
     jobject obj { nullptr };
-    bool isOwned { false };
 
     void dispose()
     {
-        if (obj && isOwned)
+        if (obj)
         {
             auto env = JVM::getEnv();
             if (env->GetObjectRefType(obj) == JNIGlobalRefType)
@@ -513,7 +564,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return JObject(getFieldValue<jobject>(env, fieldId), true);
+        return static_cast<JObject>(getFieldValue<jobject>(env, fieldId));
     }
 
     template<typename T>
