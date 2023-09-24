@@ -29,10 +29,21 @@ public:
             }
             else if (res == JNI_EDETACHED && vm->AttachCurrentThread(&env, nullptr) == JNI_OK)
             {
-                return JEnv(env);
+                return JEnv(env, vm);
             }
         }
         throw std::runtime_error("Java ENV cannot be created!");
+    }
+    static inline void detachThread()
+    {
+        if (vm)
+        {
+            if (vm->DetachCurrentThread() == JNI_OK)
+            {
+                return;
+            }
+        }
+        throw std::runtime_error("Java can not detach from thread!");
     }
 private:
     inline static JavaVM* vm { nullptr };
