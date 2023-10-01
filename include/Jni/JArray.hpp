@@ -12,12 +12,11 @@ class JArray final : public JObject
     class JArrayData final
     {
     public:
-        JArrayData(const TJArray& initArray)
+        JArrayData(JEnv env, const TJArray& initArray)
             : jniArray(initArray)
         {
             if (jniArray)
             {
-                auto env = JVM::getEnv();
                 length = env->GetArrayLength(jniArray);
                 dataPtr = getDataPtr(env);
             }
@@ -188,7 +187,7 @@ public:
 
     inline operator TCpp()
     {
-        JArrayData data(static_cast<TJArray>(jniObject));
+        JArrayData data(JVM::getEnv(), static_cast<TJArray>(jniObject));
         return static_cast<TCpp>(data);
     }
 
@@ -199,7 +198,7 @@ public:
 
     inline JArrayData getData() const
     {
-        return static_cast<TJArray>(jniObject);
+        return JArrayData(JVM::getEnv(), static_cast<TJArray>(jniObject));
     }
 
     template<typename T=TJArray>

@@ -11,12 +11,11 @@ class JString final: public JObject
     class JStringData final
     {
     public:
-        JStringData(const jstring& initString)
+        JStringData(JEnv env, const jstring& initString)
             : jniString(initString)
         {
             if (jniString)
             {
-                auto env = JVM::getEnv();
                 length = env->GetStringUTFLength(jniString);
                 dataPtr = env->GetStringUTFChars(jniString, nullptr);
             }
@@ -60,7 +59,7 @@ public:
 
     inline operator std::string() const
     {
-        JStringData data(static_cast<jstring>(jniObject));
+        JStringData data(JVM::getEnv(), static_cast<jstring>(jniObject));
         return static_cast<std::string>(data);
     }
 
@@ -71,7 +70,7 @@ public:
 
     inline JStringData getData() const
     {
-        return static_cast<jstring>(jniObject);
+        return JStringData(JVM::getEnv(), static_cast<jstring>(jniObject));
     }
 
     inline static JString createFrom(JEnv env, const std::string& str)
