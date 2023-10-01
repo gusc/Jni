@@ -760,7 +760,17 @@ inline JClass JEnv::getClass(const char* classPath)
     auto cls = env->FindClass(classPath);
     if (!cls)
     {
-        throw std::runtime_error(std::string("Can't find ") + classPath + " Java class");
+        // An exception is most likely raised, we must ignore it for now
+        if (env->ExceptionCheck() == JNI_TRUE)
+        {
+            env->ExceptionClear();
+        }
+        cls = JVM::loadAndFindClass(env, classPath);
+        if (!cls)
+        {
+            checkException(*this);
+            throw std::runtime_error(std::string("Can't find ") + classPath + " Java class");
+        }
     }
     return JClass(*this, cls).createGlobalRef();
 }
@@ -779,8 +789,9 @@ inline void JEnv::checkException(JEnv& env)
 {
     if (env->ExceptionCheck() == JNI_TRUE)
     {
-        auto ex = JObject(static_cast<jobject>(env->ExceptionOccurred()));
+        auto jniEx = env->ExceptionOccurred();
         env->ExceptionClear();
+        auto ex = JObject(static_cast<jobject>(jniEx));
         auto message = ex.invokeMethod<JString>("getMessage");
         throw std::runtime_error(std::string("JNI Exception occured: ") + static_cast<std::string>(message));
     }

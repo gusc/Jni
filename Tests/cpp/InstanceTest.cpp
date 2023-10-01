@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <vector>
+#include <future>
 #include "Jni/Jni.hpp"
 
 using namespace gusc::Jni;
@@ -341,4 +342,15 @@ TEST_F(InstanceTest, Fields)
     EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
     auto testInstance = testClass.createObjectS().createGlobalRefS();
     obj.setField("testClassField", testInstance);
+}
+
+TEST_F(InstanceTest, MultiThreading)
+{
+    auto f = std::async(std::launch::async, [](){
+        JClass cls2 { JVM::getEnv().getClass("lv/gusc/jni/tests/InstanceClass") };
+        auto obj = cls2.createObject();
+        auto a2 = obj.getField<jboolean>("booleanField");
+        EXPECT_TRUE(a2);
+    });
+    f.get();
 }
