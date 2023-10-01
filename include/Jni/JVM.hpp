@@ -1,11 +1,7 @@
 #ifndef __GUSC_JVM_HPP
 #define __GUSC_JVM_HPP 1
 
-#include <jni.h>
-
 #include <stdexcept>
-
-#include "JEnv.hpp"
 
 namespace gusc::Jni
 {

@@ -1,7 +1,6 @@
 #ifndef __GUSC_JENV_HPP
 #define __GUSC_JENV_HPP 1
 
-#include <jni.h>
 #include <memory>
 
 namespace gusc::Jni

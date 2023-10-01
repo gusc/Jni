@@ -1,10 +1,6 @@
 #ifndef __GUSC_JOBJECT_HPP
 #define __GUSC_JOBJECT_HPP 1
 
-#include <jni.h>
-#include "JVM.hpp"
-#include "JEnv.hpp"
-#include "JString.hpp"
 #include "private/concat.hpp"
 #include "private/signature.hpp"
 
@@ -12,6 +8,7 @@ namespace gusc::Jni
 {
 
 class JClass;
+class JString;
 
 // TODO:
 // 1. make JArray and JString objects extend from JObject
@@ -421,10 +418,7 @@ protected:
         std::is_same_v<TReturn, JString>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
-    {
-        return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
-    }
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept;
 
     template<typename TReturn, typename... TArgs>
     inline
@@ -551,10 +545,7 @@ protected:
         std::is_same_v<T, JString>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
-    {
-        return JString(getFieldValue<jstring>(env, fieldId));
-    }
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept;
 
     template<typename T>
     inline

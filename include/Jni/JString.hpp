@@ -88,6 +88,28 @@ private:
     }
 };
 
+template<typename T>
+inline
+typename std::enable_if_t<
+        std::is_same_v<T, JString>,
+        T
+>
+JObject::getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
+{
+    return JString(getFieldValue<jstring>(env, fieldId));
+}
+
+template<typename TReturn, typename... TArgs>
+inline
+typename std::enable_if_t<
+        std::is_same_v<TReturn, JString>,
+        TReturn
+>
+JObject::invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
+{
+    return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
+}
+
 }
 
 #endif // __GUSC_JSTRING_HPP
