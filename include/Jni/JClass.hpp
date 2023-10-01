@@ -706,7 +706,7 @@ inline jfieldID JObject::getFieldIdJni(JEnv& env, const std::string& name, const
 
 inline JClass JObject::getClass(JEnv& env) const noexcept
 {
-    return env.getObjectClass(obj);
+    return env.getObjectClass(jniObject);
 }
 
 inline JClass JObject::getClass() const noexcept
