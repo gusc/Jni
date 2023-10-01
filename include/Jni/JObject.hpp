@@ -17,14 +17,14 @@ class JString;
 // note: maybe 2&3 can be somehow combined with some optimization for when creating object from raw
 //       jtype we do not copy reference, but if we copy from JObject to another then we do
 // 4. instead of JGlobalRef create method in JObject to create global or weak references that just copies the object
-class JObject final
+class JObject
 {
 public:
     /// @brief create empty JNI object wrapper
     JObject() = default;
-    explicit JObject(const jobject& initObject)
+    /// @brief wrap around an existing JNI object
+    JObject(JEnv env, const jobject& initObject)
     {
-        auto env = JVM::getEnv();
         if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
         {
             jniObject = env->NewLocalRef(initObject);
@@ -38,6 +38,9 @@ public:
             jniObject = env->NewGlobalRef(initObject);
         }
     }
+    JObject(const jobject& initObject)
+        : JObject(JVM::getEnv(), initObject)
+    {}
     JObject(const JObject& other)
     {
         auto env = JVM::getEnv();
