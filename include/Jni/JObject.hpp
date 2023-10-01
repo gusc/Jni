@@ -10,13 +10,6 @@ namespace gusc::Jni
 class JClass;
 class JString;
 
-// TODO:
-// 1. make JArray and JString objects extend from JObject
-// 2. drop current ownership in favor of always creating a reference copy
-// 3. make it possible to copy objects taking into account their reference type (global, local, weak)
-// note: maybe 2&3 can be somehow combined with some optimization for when creating object from raw
-//       jtype we do not copy reference, but if we copy from JObject to another then we do
-// 4. instead of JGlobalRef create method in JObject to create global or weak references that just copies the object
 class JObject
 {
 public:
