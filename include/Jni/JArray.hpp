@@ -30,6 +30,11 @@ class JArray final : public JObject
             return TCpp(dataPtr, dataPtr + length);
         }
 
+        inline TJArrayElement* data() const
+        {
+            return dataPtr;
+        }
+
         ~JArrayData()
         {
             if (jniArray && dataPtr)
@@ -192,10 +197,10 @@ public:
         return static_cast<TJArray>(jniObject);
     }
 
-//    inline TJArrayElement* data()
-//    {
-//        return dataPtr;
-//    }
+    inline JArrayData getData() const
+    {
+        return static_cast<TJArray>(jniObject);
+    }
 
     template<typename T=TJArray>
     static inline

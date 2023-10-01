@@ -29,6 +29,11 @@ class JString final: public JObject
             return std::string(dataPtr, dataPtr + length);
         }
 
+        inline const char* data() const
+        {
+            return dataPtr;
+        }
+
         ~JStringData()
         {
             if (jniString && dataPtr)
@@ -60,6 +65,11 @@ public:
     }
 
     inline operator jstring() const
+    {
+        return static_cast<jstring>(jniObject);
+    }
+
+    inline JStringData getData() const
     {
         return static_cast<jstring>(jniObject);
     }
