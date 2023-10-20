@@ -1,10 +1,6 @@
 #ifndef __GUSC_JOBJECT_HPP
 #define __GUSC_JOBJECT_HPP 1
 
-#include <jni.h>
-#include "JVM.hpp"
-#include "JEnv.hpp"
-#include "JString.hpp"
 #include "private/concat.hpp"
 #include "private/signature.hpp"
 
@@ -12,42 +8,74 @@ namespace gusc::Jni
 {
 
 class JClass;
+class JString;
 
-// TODO:
-// 1. make JArray and JString objects extend from JObject
-// 2. drop current ownership in favor of always creating a reference copy
-// 3. make it possible to copy objects taking into account their reference type (global, local, weak)
-// note: maybe 2&3 can be somehow combined with some optimization for when creating object from raw
-//       jtype we do not copy reference, but if we copy from JObject to another then we do
-// 4. instead of JGlobalRef create method in JObject to create global or weak references that just copies the object
-class JObject final
+class JObject
 {
 public:
     /// @brief create empty JNI object wrapper
     JObject() = default;
-    /// @brief create new JNI object wrapper
-    /// @param initObject - the jobject to wrap
-    /// @param initIsOwned - whether we own this object (objects created by you, must be owned, so that they are freed on destruction)
-    JObject(const jobject& initObject, bool initIsOwned = false)
-        : obj(initObject)
-        , isOwned(initIsOwned)
-    {}
-    JObject(const JObject& other) = delete;
-    JObject& operator=(const JObject& other) = delete;
-    JObject(JObject&& other)
-        : obj(other.obj)
-        , isOwned(other.isOwned)
+    /// @brief wrap around an existing JNI object
+    JObject(JEnv env, const jobject& initObject)
     {
-        other.obj = nullptr;
-        other.isOwned = false;
+        if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
+        {
+            jniObject = env->NewLocalRef(initObject);
+        }
+        else if (env->GetObjectRefType(initObject) == JNIWeakGlobalRefType)
+        {
+            jniObject = env->NewWeakGlobalRef(initObject);
+        }
+        else
+        {
+            jniObject = env->NewGlobalRef(initObject);
+        }
+    }
+    JObject(const jobject& initObject)
+        : JObject(JVM::getEnv(), initObject)
+    {}
+    JObject(const JObject& other)
+    {
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(other.jniObject) == JNIGlobalRefType)
+        {
+            jniObject = env->NewLocalRef(other.jniObject);
+        }
+        else if (env->GetObjectRefType(other.jniObject) == JNIWeakGlobalRefType)
+        {
+            jniObject = env->NewWeakGlobalRef(other.jniObject);
+        }
+        else
+        {
+            jniObject = env->NewGlobalRef(other.jniObject);
+        }
+    }
+    JObject& operator=(const JObject& other)
+    {
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(other.jniObject) == JNIGlobalRefType)
+        {
+            jniObject = env->NewLocalRef(other.jniObject);
+        }
+        else if (env->GetObjectRefType(other.jniObject) == JNIWeakGlobalRefType)
+        {
+            jniObject = env->NewWeakGlobalRef(other.jniObject);
+        }
+        else
+        {
+            jniObject = env->NewGlobalRef(other.jniObject);
+        }
+        return *this;
+    }
+    JObject(JObject&& other)
+        : jniObject(other.jniObject)
+    {
+        std::swap(jniObject, other.jniObject);
     }
     JObject& operator=(JObject&& other)
     {
         dispose();
-        obj = other.obj;
-        isOwned = other.isOwned;
-        other.obj = nullptr;
-        other.isOwned = false;
+        std::swap(jniObject, other.jniObject);
         return *this;
     }
     ~JObject()
@@ -55,23 +83,40 @@ public:
         dispose();
     }
 
+    /// @brief Create a copy of this object with reference type of global ref
+    JObject createGlobalRef() const
+    {
+        auto env = JVM::getEnv();
+        JObject other;
+        other.jniObject = env->NewGlobalRef(jniObject);
+        return other;
+    }
+
+    /// @brief Create a copy of this object with reference type of weak global ref
+    JObject createWeakGlobalRef() const
+    {
+        auto env = JVM::getEnv();
+        JObject other;
+        other.jniObject = env->NewWeakGlobalRef(jniObject);
+        return other;
+    }
+
     inline operator bool() const
     {
-        return obj != nullptr;
+        return jniObject != nullptr;
     }
 
     inline operator jobject() const
     {
-        return obj;
+        return jniObject;
     }
 
-    /// @brief Release the wrapped object. If it was owned, it's ownership is also released.
-    /// @note Use this method to return an object from native method
+    /// @brief Release the wrapped object.
+    /// @note Use this method to return an object from native method without it being destroyed by RAII
     inline jobject release()
     {
-        auto tmp = obj;
-        obj = nullptr;
-        isOwned = false;
+        jobject tmp { nullptr };
+        std::swap(jniObject, tmp);
         return tmp;
     }
 
@@ -220,40 +265,39 @@ public:
     }
 
 protected:
-    jobject obj { nullptr };
-    bool isOwned { false };
+    jobject jniObject { nullptr };
 
     void dispose()
     {
-        if (obj && isOwned)
+        if (jniObject)
         {
             auto env = JVM::getEnv();
-            if (env->GetObjectRefType(obj) == JNIGlobalRefType)
+            if (env->GetObjectRefType(jniObject) == JNIGlobalRefType)
             {
-                env->DeleteGlobalRef(obj);
+                env->DeleteGlobalRef(jniObject);
             }
-            else if (env->GetObjectRefType(obj) == JNIWeakGlobalRefType)
+            else if (env->GetObjectRefType(jniObject) == JNIWeakGlobalRefType)
             {
-                env->DeleteWeakGlobalRef(obj);
+                env->DeleteWeakGlobalRef(jniObject);
             }
             else
             {
-                env->DeleteLocalRef(obj);
+                env->DeleteLocalRef(jniObject);
             }
-            obj = nullptr;
+            jniObject = nullptr;
         }
     }
 
     inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId) const noexcept
     {
-        env->CallVoidMethod(obj, methodId);
+        env->CallVoidMethod(jniObject, methodId);
     }
 
     template<typename... TArgs>
     inline
     void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        env->CallVoidMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        env->CallVoidMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -264,7 +308,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallBooleanMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallBooleanMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -275,7 +319,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallCharMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallCharMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -286,7 +330,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallByteMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallByteMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -297,7 +341,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallShortMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallShortMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -308,7 +352,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallIntMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallIntMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -319,7 +363,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallLongMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallLongMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -330,7 +374,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallFloatMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallFloatMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -341,7 +385,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallDoubleMethod(obj, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallDoubleMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -361,7 +405,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return static_cast<TReturn>(env->CallObjectMethod(obj, methodId, std::forward<const TArgs&>(args)...));
+        return static_cast<TReturn>(env->CallObjectMethod(jniObject, methodId, std::forward<const TArgs&>(args)...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -370,10 +414,7 @@ protected:
         std::is_same_v<TReturn, JString>,
         TReturn
     >
-    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
-    {
-        return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
-    }
+    invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept;
 
     template<typename TReturn, typename... TArgs>
     inline
@@ -394,7 +435,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetBooleanField(obj, fieldId);
+        return env->GetBooleanField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -405,7 +446,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetCharField(obj, fieldId);
+        return env->GetCharField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -416,7 +457,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetByteField(obj, fieldId);
+        return env->GetByteField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -427,7 +468,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetShortField(obj, fieldId);
+        return env->GetShortField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -438,7 +479,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetIntField(obj, fieldId);
+        return env->GetIntField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -449,7 +490,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetLongField(obj, fieldId);
+        return env->GetLongField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -460,7 +501,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetFloatField(obj, fieldId);
+        return env->GetFloatField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -471,7 +512,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetDoubleField(obj, fieldId);
+        return env->GetDoubleField(jniObject, fieldId);
     }
 
     template<typename T>
@@ -491,7 +532,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return static_cast<T>(env->GetObjectField(obj, fieldId));
+        return static_cast<T>(env->GetObjectField(jniObject, fieldId));
     }
 
     template<typename T>
@@ -500,10 +541,7 @@ protected:
         std::is_same_v<T, JString>,
         T
     >
-    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
-    {
-        return JString(getFieldValue<jstring>(env, fieldId));
-    }
+    getFieldValue(JEnv& env, jfieldID fieldId) const noexcept;
 
     template<typename T>
     inline
@@ -513,7 +551,7 @@ protected:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return JObject(getFieldValue<jobject>(env, fieldId), true);
+        return static_cast<JObject>(getFieldValue<jobject>(env, fieldId));
     }
 
     template<typename T>
@@ -523,7 +561,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetBooleanField(obj, fieldId, value);
+        env->SetBooleanField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -533,7 +571,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetCharField(obj, fieldId, value);
+        env->SetCharField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -543,7 +581,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetByteField(obj, fieldId, value);
+        env->SetByteField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -553,7 +591,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetShortField(obj, fieldId, value);
+        env->SetShortField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -563,7 +601,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetIntField(obj, fieldId, value);
+        env->SetIntField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -573,7 +611,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetLongField(obj, fieldId, value);
+        env->SetLongField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -583,7 +621,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetFloatField(obj, fieldId, value);
+        env->SetFloatField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -593,7 +631,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetDoubleField(obj, fieldId, value);
+        env->SetDoubleField(jniObject, fieldId, value);
     }
 
     template<typename T>
@@ -612,7 +650,7 @@ protected:
                                   const T&
                               > value) noexcept
     {
-        env->SetObjectField(obj, fieldId, static_cast<jobject>(value));
+        env->SetObjectField(jniObject, fieldId, static_cast<jobject>(value));
     }
 
     template<typename T>

@@ -2,7 +2,11 @@
 #define __GUSC_PRIVATE_SIGNATURE_HPP 1
 
 #include "concat.hpp"
-#include <jni.h>
+
+namespace gusc::Jni
+{
+class JString;
+}
 
 namespace gusc::Jni::Private
 {

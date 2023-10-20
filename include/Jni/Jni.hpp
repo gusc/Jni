@@ -2,11 +2,11 @@
 #define __GUSC_JNI_HPP 1
 
 #include <jni.h>
-#include "JVM.hpp"
 #include "JEnv.hpp"
-#include "JString.hpp"
-#include "JClass.hpp"
+#include "JVM.hpp"
 #include "JObject.hpp"
+#include "JClass.hpp"
+#include "JString.hpp"
 #include "JArray.hpp"
 #include "JGlobalRef.hpp"
 
