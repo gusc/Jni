@@ -18,6 +18,7 @@ set(SOURCES
 	"cpp/InstanceTest.cpp"
 	"cpp/NativeClassMock.hpp"
 	"cpp/NativeClassTest.cpp"
+    "cpp/PrivateTest.cpp"
 	"cpp/StaticTest.cpp"
 )
 

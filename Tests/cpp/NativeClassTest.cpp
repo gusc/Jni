@@ -79,3 +79,14 @@ TEST_F(NativeClassTest, NativeClassTest)
     EXPECT_TRUE(compare(p, p1));
     EXPECT_TRUE(compare(q, q1));
 }
+
+TEST_F(NativeClassTest, InstanceClass)
+{
+    auto instance = mock.getInstance();
+    auto res = instance.invokeMethod<jboolean>("getBoolean");
+    EXPECT_TRUE(res);
+    instance.invokeMethod<void>("setBoolean", static_cast<jboolean>(false));
+    auto instance2 = mock.instancePassthrough(instance);
+    auto res2 = instance.invokeMethod<jboolean>("getBoolean");
+    EXPECT_FALSE(res2);
+}

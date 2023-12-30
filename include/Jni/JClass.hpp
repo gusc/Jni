@@ -6,7 +6,7 @@
 #include "JObject.hpp"
 #include "JString.hpp"
 #include "private/cast.hpp"
-#include "private/concat.hpp"
+#include "private/strutils.hpp"
 #include "private/signature.hpp"
 #include <type_traits>
 
@@ -16,6 +16,8 @@ namespace gusc::Jni
 class JClass final
 {
 public:
+    using JniType = jclass;
+
     JClass(JEnv& initEnv, jclass initClass)
         : jniEnv(initEnv)
         , cls(initClass)
@@ -294,7 +296,7 @@ private:
     inline
     void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        env->CallStaticVoidMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        env->CallStaticVoidMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -305,7 +307,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticBooleanMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticBooleanMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -316,7 +318,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticCharMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticCharMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -327,7 +329,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticByteMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticByteMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -338,7 +340,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticShortMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticShortMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -349,7 +351,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticIntMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticIntMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -360,7 +362,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticLongMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticLongMethod(cls, methodId,Private::to_jni( std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -371,7 +373,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticFloatMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticFloatMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -382,7 +384,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticDoubleMethod(cls, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallStaticDoubleMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -402,7 +404,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return static_cast<TReturn>(env->CallStaticObjectMethod(cls, methodId, std::forward<const TArgs&>(args)...));
+        return static_cast<TReturn>(env->CallStaticObjectMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -413,7 +415,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return JString(invokeMethodReturn<jstring>(env, methodId, std::forward<const TArgs&>(args)...));
+        return JString(invokeMethodReturn<jstring>(env, methodId, Private::to_jni(std::forward<const TArgs&>(args))...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -424,7 +426,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return JObject(invokeMethodReturn<jobject>(env, methodId, std::forward<const TArgs&>(args)...), true);
+        return JObject(invokeMethodReturn<jobject>(env, methodId, Private::to_jni(std::forward<const TArgs&>(args))...), true);
     }
 
     template<typename T>

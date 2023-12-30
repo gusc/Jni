@@ -51,6 +51,7 @@ class JString final: public JObject
     };
 public:
     using StlType = std::string;
+    using JniType = jstring;
 
     /// @brief wrap around existing JNI jstring object
     JString(JEnv env, const jstring& initString)

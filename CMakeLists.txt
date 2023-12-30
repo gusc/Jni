@@ -15,8 +15,9 @@ set(SOURCES
 	"include/Jni/Jni.hpp"
 	"include/Jni/JObject.hpp"
 	"include/Jni/JString.hpp"
+	"include/Jni/private/forward.hpp"
 	"include/Jni/private/signature.hpp"
-	"include/Jni/private/concat.hpp"
+	"include/Jni/private/strutils.hpp"
 	"include/Jni/private/cast.hpp"
 )
 	
