@@ -2,6 +2,7 @@
 #define __GUSC_JARRAY_HPP 1
 
 #include <jni.h>
+#include <type_traits>
 
 namespace gusc::Jni
 {

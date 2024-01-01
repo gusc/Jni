@@ -2,9 +2,7 @@
 // Created by Gusts Kaksis on 23/10/2021.
 //
 
-#ifndef TESTS_STATICTEST_HPP
-#define TESTS_STATICTEST_HPP
-
+#include <gtest/gtest.h>
 #include "Jni/Jni.hpp"
 
 using namespace gusc::Jni;
@@ -106,10 +104,8 @@ void runStaticTestMethodsAndFields(JClass& cls)
 
 }
 
-void runStaticTest()
+TEST(StaticTest, StaticTest)
 {
     auto cls = JVM::getEnv().getClass("lv/gusc/jni/tests/StaticTest");
     runStaticTestMethodsAndFields(cls);
 }
-
-#endif //TESTS_STATICTEST_HPP

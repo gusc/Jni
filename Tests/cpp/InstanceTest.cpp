@@ -2,9 +2,7 @@
 // Created by Gusts Kaksis on 23/10/2021.
 //
 
-#ifndef TESTS_INSTANCETEST_HPP
-#define TESTS_INSTANCETEST_HPP
-
+#include <gtest/gtest.h>
 #include <vector>
 #include "Jni/Jni.hpp"
 
@@ -108,7 +106,7 @@ void runInstanceTestMethodsAndFields(JObject& obj)
 
 }
 
-void runInstanceTest()
+TEST(InstanceTest, InstanceTest)
 {
     auto cls = JVM::getEnv().getClass("lv/gusc/jni/tests/InstanceTest");
 
@@ -149,6 +147,3 @@ void runInstanceTest()
     }
 
 }
-
-
-#endif //TESTS_INSTANCETEST_HPP

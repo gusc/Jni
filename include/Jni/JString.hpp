@@ -2,6 +2,7 @@
 #define __GUSC_JSTRING_HPP 1
 
 #include <string>
+#include <type_traits>
 
 namespace gusc::Jni
 {

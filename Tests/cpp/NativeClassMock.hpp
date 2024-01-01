@@ -2,10 +2,12 @@
 // Created by Gusts Kaksis on 23/10/2021.
 //
 
-#ifndef TESTS_NATIVECLASSTEST_HPP
-#define TESTS_NATIVECLASSTEST_HPP
+#ifndef TESTS_NATIVECLASSMOCK_HPP
+#define TESTS_NATIVECLASSMOCK_HPP
 
 #include "Jni/Jni.hpp"
+
+using namespace gusc::Jni;
 
 // C++20 will have this built-in:
 #if __cplusplus <= 201703L
@@ -38,10 +40,10 @@ inline jlong fromPtr(T* ptr)
 }
 }
 
-class NativeClassTest
+class NativeClassMock
 {
 public:
-    NativeClassTest()
+    NativeClassMock()
         : objRef(JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClassTest").createObject(fromPtr(this)))
     {}
 
@@ -208,25 +210,25 @@ public:
     static void registerNativeMethods()
     {
         auto cls = JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClassTest");
-        cls.registerNativeMethod("nativeVoidMethodNoArgs", &NativeClassTest::nativeVoidMethodNoArgsJni);
-        cls.registerNativeMethod("nativeVoidMethod", &NativeClassTest::nativeVoidMethodJni);
-        cls.registerNativeMethod("nativeBooleanMethod", &NativeClassTest::nativeBooleanMethodJni);
-        cls.registerNativeMethod("nativeByteMethod", &NativeClassTest::nativeByteMethodJni);
-        cls.registerNativeMethod("nativeCharMethod", &NativeClassTest::nativeCharMethodJni);
-        cls.registerNativeMethod("nativeShortMethod", &NativeClassTest::nativeShortMethodJni);
-        cls.registerNativeMethod("nativeIntMethod", &NativeClassTest::nativeIntMethodJni);
-        cls.registerNativeMethod("nativeLongMethod", &NativeClassTest::nativeLongMethodJni);
-        cls.registerNativeMethod("nativeFloatMethod", &NativeClassTest::nativeFloatMethodJni);
-        cls.registerNativeMethod("nativeDoubleMethod", &NativeClassTest::nativeDoubleMethodJni);
-        cls.registerNativeMethod("nativeStringMethod", &NativeClassTest::nativeStringMethodJni);
-        cls.registerNativeMethod("nativeBooleanArrayMethod", &NativeClassTest::nativeBooleanArrayMethodJni);
-        cls.registerNativeMethod("nativeByteArrayMethod", &NativeClassTest::nativeByteArrayMethodJni);
-        cls.registerNativeMethod("nativeCharArrayMethod", &NativeClassTest::nativeCharArrayMethodJni);
-        cls.registerNativeMethod("nativeShortArrayMethod", &NativeClassTest::nativeShortArrayMethodJni);
-        cls.registerNativeMethod("nativeIntArrayMethod", &NativeClassTest::nativeIntArrayMethodJni);
-        cls.registerNativeMethod("nativeLongArrayMethod", &NativeClassTest::nativeLongArrayMethodJni);
-        cls.registerNativeMethod("nativeFloatArrayMethod", &NativeClassTest::nativeFloatArrayMethodJni);
-        cls.registerNativeMethod("nativeDoubleArrayMethod", &NativeClassTest::nativeDoubleArrayMethodJni);
+        cls.registerNativeMethod("nativeVoidMethodNoArgs", &NativeClassMock::nativeVoidMethodNoArgsJni);
+        cls.registerNativeMethod("nativeVoidMethod", &NativeClassMock::nativeVoidMethodJni);
+        cls.registerNativeMethod("nativeBooleanMethod", &NativeClassMock::nativeBooleanMethodJni);
+        cls.registerNativeMethod("nativeByteMethod", &NativeClassMock::nativeByteMethodJni);
+        cls.registerNativeMethod("nativeCharMethod", &NativeClassMock::nativeCharMethodJni);
+        cls.registerNativeMethod("nativeShortMethod", &NativeClassMock::nativeShortMethodJni);
+        cls.registerNativeMethod("nativeIntMethod", &NativeClassMock::nativeIntMethodJni);
+        cls.registerNativeMethod("nativeLongMethod", &NativeClassMock::nativeLongMethodJni);
+        cls.registerNativeMethod("nativeFloatMethod", &NativeClassMock::nativeFloatMethodJni);
+        cls.registerNativeMethod("nativeDoubleMethod", &NativeClassMock::nativeDoubleMethodJni);
+        cls.registerNativeMethod("nativeStringMethod", &NativeClassMock::nativeStringMethodJni);
+        cls.registerNativeMethod("nativeBooleanArrayMethod", &NativeClassMock::nativeBooleanArrayMethodJni);
+        cls.registerNativeMethod("nativeByteArrayMethod", &NativeClassMock::nativeByteArrayMethodJni);
+        cls.registerNativeMethod("nativeCharArrayMethod", &NativeClassMock::nativeCharArrayMethodJni);
+        cls.registerNativeMethod("nativeShortArrayMethod", &NativeClassMock::nativeShortArrayMethodJni);
+        cls.registerNativeMethod("nativeIntArrayMethod", &NativeClassMock::nativeIntArrayMethodJni);
+        cls.registerNativeMethod("nativeLongArrayMethod", &NativeClassMock::nativeLongArrayMethodJni);
+        cls.registerNativeMethod("nativeFloatArrayMethod", &NativeClassMock::nativeFloatArrayMethodJni);
+        cls.registerNativeMethod("nativeDoubleArrayMethod", &NativeClassMock::nativeDoubleArrayMethodJni);
     }
 private:
     JGlobalRef objRef;
@@ -250,110 +252,99 @@ private:
 
     static void nativeVoidMethodNoArgsJni(JNIEnv*, jobject thiz)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         ptr->nativeVoidMethodNoArgs();
     }
     static void nativeVoidMethodJni(JNIEnv*, jobject thiz, jboolean newA, jbyte newB, jchar newC, jshort newD, jint newE, jlong newF, jfloat newG, jdouble newH, jstring newI)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         ptr->nativeVoidMethod(newA, newB, newC, newD, newE, newF, newG, newH, newI);
     }
     static jboolean nativeBooleanMethodJni(JNIEnv*, jobject thiz, jboolean val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeBooleanMethod(val);
     }
     static jbyte nativeByteMethodJni(JNIEnv*, jobject thiz, jbyte val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeByteMethod(val);
     }
     static jchar nativeCharMethodJni(JNIEnv*, jobject thiz, jchar val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeCharMethod(val);
     }
     static jshort nativeShortMethodJni(JNIEnv*, jobject thiz, jshort val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeShortMethod(val);
     }
     static jint nativeIntMethodJni(JNIEnv*, jobject thiz, jint val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeIntMethod(val);
     }
     static jlong nativeLongMethodJni(JNIEnv*, jobject thiz, jlong val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeLongMethod(val);
     }
     static jfloat nativeFloatMethodJni(JNIEnv*, jobject thiz, jfloat val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeFloatMethod(val);
     }
     static jdouble nativeDoubleMethodJni(JNIEnv*, jobject thiz, jdouble val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeDoubleMethod(val);
     }
     static jstring nativeStringMethodJni(JNIEnv*, jobject thiz, jstring val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeStringMethod(val);
     }
     static jbooleanArray nativeBooleanArrayMethodJni(JNIEnv*, jobject thiz, jbooleanArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeBooleanArrayMethod(val);
     }
     static jbyteArray nativeByteArrayMethodJni(JNIEnv*, jobject thiz, jbyteArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeByteArrayMethod(val);
     }
     static jcharArray nativeCharArrayMethodJni(JNIEnv*, jobject thiz, jcharArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeCharArrayMethod(val);
     }
     static jshortArray nativeShortArrayMethodJni(JNIEnv*, jobject thiz, jshortArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeShortArrayMethod(val);
     }
     static jintArray nativeIntArrayMethodJni(JNIEnv*, jobject thiz, jintArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeIntArrayMethod(val);
     }
     static jlongArray nativeLongArrayMethodJni(JNIEnv*, jobject thiz, jlongArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeLongArrayMethod(val);
     }
     static jfloatArray nativeFloatArrayMethodJni(JNIEnv*, jobject thiz, jfloatArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeFloatArrayMethod(val);
     }
     static jdoubleArray nativeDoubleArrayMethodJni(JNIEnv*, jobject thiz, jdoubleArray val)
     {
-        auto ptr = toPtr<NativeClassTest>(JObject(thiz).getField<jlong>("nativePtr"));
+        auto ptr = toPtr<NativeClassMock>(JObject(thiz).getField<jlong>("nativePtr"));
         return ptr->nativeDoubleArrayMethod(val);
     }
 };
 
-void registerNativeMethods()
-{
-    NativeClassTest::registerNativeMethods();
-}
-
-void runNativeTest()
-{
-    NativeClassTest test;
-    test.runTest();
-}
-
-#endif //TESTS_NATIVECLASSTEST_HPP
+#endif //TESTS_NATIVECLASSMOCK_HPP

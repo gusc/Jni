@@ -3,6 +3,7 @@
 
 #include "private/concat.hpp"
 #include "private/signature.hpp"
+#include <type_traits>
 
 namespace gusc::Jni
 {
