@@ -47,7 +47,7 @@ class JArray final : public JObject
     private:
         TJArray jniArray { nullptr };
         std::size_t length { 0 };
-        const TJArrayElement* dataPtr { nullptr };
+        TJArrayElement* dataPtr { nullptr };
 
         template<typename T=TJArray>
         inline

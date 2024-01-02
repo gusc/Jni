@@ -25,7 +25,20 @@ public:
     {
         if (cls)
         {
-            jniEnv->DeleteLocalRef(cls);
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(cls) == JNIGlobalRefType)
+            {
+                env->DeleteGlobalRef(cls);
+            }
+            else if (env->GetObjectRefType(cls) == JNIWeakGlobalRefType)
+            {
+                env->DeleteWeakGlobalRef(cls);
+            }
+            else
+            {
+                env->DeleteLocalRef(cls);
+            }
+            cls = nullptr;
         }
     }
     
