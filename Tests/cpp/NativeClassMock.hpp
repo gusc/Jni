@@ -6,8 +6,10 @@
 #define TESTS_NATIVECLASSMOCK_HPP
 
 #include "Jni/Jni.hpp"
+#include <gmock/gmock.h>
 
 using namespace gusc::Jni;
+using namespace ::testing;
 
 // C++20 will have this built-in:
 #if __cplusplus <= 201703L
@@ -44,172 +46,110 @@ class NativeClassMock
 {
 public:
     NativeClassMock()
-        : objRef(JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClassTest").createObject(fromPtr(this)))
+        : objRef(JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClass").createObject(fromPtr(this)))
     {}
 
-    void runTest()
+    void voidMethodNoArgs()
     {
-        objRef->invokeMethod<void>("runTest");
+        objRef->invokeMethod<void>("voidMethodNoArgs");
     }
 
-    void nativeVoidMethodNoArgs()
-    {}
-
-    void nativeVoidMethod(jboolean newA, jbyte newB, jchar newC, jshort newD, jint newE, jlong newF, jfloat newG, jdouble newH, jstring newI)
+    void voidMethod(jboolean newA, jbyte newB, jchar newC, jshort newD, jint newE, jlong newF, jfloat newG, jdouble newH, jstring newI)
     {
-        a = newA;
-        b = newB;
-        c = newC;
-        d = newD;
-        e = newE;
-        f = newF;
-        g = newG;
-        h = newH;
-        auto x = newI;
-        (void)(x);
+        objRef->invokeMethod<void>("voidMethod", newA, newB, newC, newD, newE, newF, newG, newH, newI);
     }
 
-    jboolean nativeBooleanMethod(jboolean val)
+    jboolean booleanMethod(jboolean val)
     {
-        auto tmp = a;
-        a = val;
-        return tmp;
+        return objRef->invokeMethod<jboolean>("booleanMethod", val);
     }
 
-    jbyte nativeByteMethod(jbyte val)
+    jbyte byteMethod(jbyte val)
     {
-        auto tmp = b;
-        b = val;
-        return tmp;
+        return objRef->invokeMethod<jbyte>("byteMethod", val);
     }
 
-    jchar nativeCharMethod(jchar val)
+    jchar charMethod(jchar val)
     {
-        auto tmp = c;
-        c = val;
-        return tmp;
+        return objRef->invokeMethod<jchar>("charMethod", val);
     }
 
-    jshort nativeShortMethod(jshort val)
+    jshort shortMethod(jshort val)
     {
-        auto tmp = d;
-        d = val;
-        return tmp;
+        return objRef->invokeMethod<jshort>("shortMethod", val);
     }
 
-    jint nativeIntMethod(jint val)
+    jint intMethod(jint val)
     {
-        auto tmp = e;
-        e = val;
-        return tmp;
+        return objRef->invokeMethod<jint>("intMethod", val);
     }
 
-    jlong nativeLongMethod(jlong val)
+    jlong longMethod(jlong val)
     {
-        auto tmp = f;
-        f = val;
-        return tmp;
+        return objRef->invokeMethod<jlong>("longMethod", val);
     }
 
-    jfloat nativeFloatMethod(jfloat val)
+    jfloat floatMethod(jfloat val)
     {
-        auto tmp = g;
-        g = val;
-        return tmp;
+        return objRef->invokeMethod<jfloat>("floatMethod", val);
     }
 
-    jdouble nativeDoubleMethod(jdouble val)
+    jdouble doubleMethod(jdouble val)
     {
-        auto tmp = h;
-        h = val;
-        return tmp;
+        return objRef->invokeMethod<jdouble>("doubleMethod", val);
     }
 
-    jstring nativeStringMethod(jstring val)
+    jstring stringMethod(jstring val)
     {
-        // TODO: implement reference copies in C++
-//        JString tmp = i;
-//        i = val;
-//        return static_cast<jstring>(tmp);
-        return val;
+        return objRef->invokeMethod<jstring>("stringMethod", val);
     }
 
-    jbooleanArray nativeBooleanArrayMethod(jbooleanArray val)
+    jbooleanArray booleanArrayMethod(jbooleanArray val)
     {
-//        JBooleanArray tmp = j;
-//        j = val;
-//        return static_cast<jbooleanArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jbooleanArray>("booleanArrayMethod", val);
     }
 
-    jbyteArray nativeByteArrayMethod(jbyteArray val)
+    jbyteArray byteArrayMethod(jbyteArray val)
     {
-//        JByteArray tmp = k;
-//        k = val;
-//        return static_cast<jbyteArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jbyteArray>("byteArrayMethod", val);
     }
 
-    jcharArray nativeCharArrayMethod(jcharArray val)
+    jcharArray charArrayMethod(jcharArray val)
     {
-//        JCharArray tmp = l;
-//        l = val;
-//        return static_cast<jcharArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jcharArray>("charArrayMethod", val);
     }
 
-    jshortArray nativeShortArrayMethod(jshortArray val)
+    jshortArray shortArrayMethod(jshortArray val)
     {
-//        JShortArray tmp = m;
-//        m = val;
-//        return static_cast<jshortArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jshortArray>("shortArrayMethod", val);
     }
 
-    jintArray nativeIntArrayMethod(jintArray val)
+    jintArray intArrayMethod(jintArray val)
     {
-//        JIntArray tmp = n;
-//        n = val;
-//        return static_cast<jintArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jintArray>("intArrayMethod", val);
     }
 
-    jlongArray nativeLongArrayMethod(jlongArray val)
+    jlongArray longArrayMethod(jlongArray val)
     {
-//        JLongArray tmp = o;
-//        o = val;
-//        return static_cast<jlongArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jlongArray>("longArrayMethod", val);
     }
 
-    jfloatArray nativeFloatArrayMethod(jfloatArray val)
+    jfloatArray floatArrayMethod(jfloatArray val)
     {
-//        JFloatArray tmp = p;
-//        p = val;
-//        return static_cast<jfloatArray>(tmp);
-        return val;
+        return objRef->invokeMethod<jfloatArray>("floatArrayMethod", val);
     }
 
-    jdoubleArray nativeDoubleArrayMethod(jdoubleArray val)
+    jdoubleArray doubleArrayMethod(jdoubleArray val)
     {
-//        JDoubleArray tmp = q;
-//        q = val;
-//        return static_cast<jdoubleArray>(q);
-        return val;
+        return objRef->invokeMethod<jdoubleArray>("doubleArrayMethod", val);
     }
 
-    jobjectArray nativeObjectArrayMethod(jobjectArray val)
-    {
-//        JObjectArray tmp = q;
-//        q = val;
-//        return static_cast<jobjectArray>(q);
-        return val;
-    }
-
+    MOCK_METHOD(void, nativeVoidCallNoArgs, ());
+    MOCK_METHOD(void, nativeVoidCall, ());
 
     static void registerNativeMethods()
     {
-        auto cls = JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClassTest");
+        auto cls = JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClass");
         cls.registerNativeMethod("nativeVoidMethodNoArgs", &NativeClassMock::nativeVoidMethodNoArgsJni);
         cls.registerNativeMethod("nativeVoidMethod", &NativeClassMock::nativeVoidMethodJni);
         cls.registerNativeMethod("nativeBooleanMethod", &NativeClassMock::nativeBooleanMethodJni);
@@ -232,23 +172,110 @@ public:
     }
 private:
     JGlobalRef objRef;
-    jboolean a { false };
-    jbyte b { 1 };
-    jchar c { 'a' };
-    jshort d { 0x1FFF };
-    jint e { 0x1FFFFFFF };
-    jlong f { 0xFFFFFFFF };
-    jfloat g { 1.f };
-    jdouble h { 2.0 };
-    JString i { JString::createFrom("asdf") };
-    JBooleanArray j { JBooleanArray::createFrom({ false, true, true, false }) };
-    JByteArray k { JByteArray::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
-    JCharArray l = { JCharArray::createFrom({ 'd', 'c', 'b', 'a' }) };
-    JShortArray m = { JShortArray ::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
-    JIntArray n = { JIntArray::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
-    JLongArray o = { JLongArray::createFrom({ 1234567890, 1234567891, 1234567892, 1234567893 }) };
-    JFloatArray p = { JFloatArray::createFrom({ 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f }) };
-    JDoubleArray q = { JDoubleArray::createFrom({ 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0 }) };
+
+    void nativeVoidMethodNoArgs()
+    {
+        nativeVoidCallNoArgs();
+    }
+
+    void nativeVoidMethod(jboolean newA, jbyte newB, jchar newC, jshort newD, jint newE, jlong newF, jfloat newG, jdouble newH, jstring newI)
+    {
+        (void)newA;
+        (void)newB;
+        (void)newC;
+        (void)newD;
+        (void)newE;
+        (void)newF;
+        (void)newG;
+        (void)newH;
+        (void)newI;
+        nativeVoidCall();
+    }
+
+    jboolean nativeBooleanMethod(jboolean val)
+    {
+        return val;
+    }
+
+    jbyte nativeByteMethod(jbyte val)
+    {
+        return val;
+    }
+
+    jchar nativeCharMethod(jchar val)
+    {
+        return val;
+    }
+
+    jshort nativeShortMethod(jshort val)
+    {
+        return val;
+    }
+
+    jint nativeIntMethod(jint val)
+    {
+        return val;
+    }
+
+    jlong nativeLongMethod(jlong val)
+    {
+        return val;
+    }
+
+    jfloat nativeFloatMethod(jfloat val)
+    {
+        return val;
+    }
+
+    jdouble nativeDoubleMethod(jdouble val)
+    {
+        return val;
+    }
+
+    jstring nativeStringMethod(jstring val)
+    {
+        return val;
+    }
+
+    jbooleanArray nativeBooleanArrayMethod(jbooleanArray val)
+    {
+        return val;
+    }
+
+    jbyteArray nativeByteArrayMethod(jbyteArray val)
+    {
+        return val;
+    }
+
+    jcharArray nativeCharArrayMethod(jcharArray val)
+    {
+        return val;
+    }
+
+    jshortArray nativeShortArrayMethod(jshortArray val)
+    {
+        return val;
+    }
+
+    jintArray nativeIntArrayMethod(jintArray val)
+    {
+        return val;
+    }
+
+    jlongArray nativeLongArrayMethod(jlongArray val)
+    {
+        return val;
+    }
+
+    jfloatArray nativeFloatArrayMethod(jfloatArray val)
+    {
+        return val;
+    }
+
+    jdoubleArray nativeDoubleArrayMethod(jdoubleArray val)
+    {
+        return val;
+    }
 
     static void nativeVoidMethodNoArgsJni(JNIEnv*, jobject thiz)
     {

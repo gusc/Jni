@@ -179,6 +179,8 @@ class JArray final : public JObject
         }
     };
 public:
+    using StlType = TCpp;
+
     JArray(JEnv env, TJArray initArray)
         : JObject(env, static_cast<jobject>(initArray))
     {}

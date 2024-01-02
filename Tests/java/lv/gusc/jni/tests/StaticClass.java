@@ -2,25 +2,25 @@ package lv.gusc.jni.tests;
 
 import androidx.annotation.Keep;
 
-public class StaticTest {
+public class StaticClass {
 
     public static boolean booleanField = true;
-    public static byte byteField = 1;
-    public static char charField = 'a';
-    public static short shortField = 512;
-    public static int intField = 0xFFFFFF;
-    public static long longField = 0xFFFFFFFFFFFFL;
-    public static float floatField = 1.5f;
-    public static double doubleField = 2.3;
+    public static byte byteField = 0x7F;
+    public static char charField = 'z';
+    public static short shortField = 0x7FFF;
+    public static int intField = 0x7FFFFFFF;
+    public static long longField = 0xFFFFFFFFFFFFFFL;
+    public static float floatField = 1.0f;
+    public static double doubleField = 2.0;
     public static String stringField = "asdf";
-    public static boolean[] booleanArrayField = {false, true};
-    public static byte[] byteArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static boolean[] booleanArrayField = {true, true};
+    public static byte[] byteArrayField = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     public static char[] charArrayField = {'a', 'b', 'c', 'd'};
-    public static short[] shortArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
-    public static int[] intArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
-    public static long[] longArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
-    public static float[] floatArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
-    public static double[] doubleArrayField = {0, 1, 2, 3, 4, 5, 6, 7};
+    public static short[] shortArrayField = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    public static int[] intArrayField = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    public static long[] longArrayField = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    public static float[] floatArrayField = {0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f};
+    public static double[] doubleArrayField = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
 
     @Keep
     static void voidMethodNoArgs() {
