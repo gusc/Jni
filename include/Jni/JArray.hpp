@@ -2,6 +2,7 @@
 #define __GUSC_JARRAY_HPP 1
 
 #include <jni.h>
+#include <type_traits>
 
 namespace gusc::Jni
 {
@@ -47,7 +48,7 @@ class JArray final : public JObject
     private:
         TJArray jniArray { nullptr };
         std::size_t length { 0 };
-        const TJArrayElement* dataPtr { nullptr };
+        TJArrayElement* dataPtr { nullptr };
 
         template<typename T=TJArray>
         inline
@@ -178,6 +179,8 @@ class JArray final : public JObject
         }
     };
 public:
+    using StlType = TCpp;
+
     JArray(JEnv env, TJArray initArray)
         : JObject(env, static_cast<jobject>(initArray))
     {}

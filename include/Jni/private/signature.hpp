@@ -2,6 +2,7 @@
 #define __GUSC_PRIVATE_SIGNATURE_HPP 1
 
 #include "concat.hpp"
+#include <type_traits>
 
 namespace gusc::Jni
 {

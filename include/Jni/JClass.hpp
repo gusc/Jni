@@ -8,6 +8,7 @@
 #include "private/cast.hpp"
 #include "private/concat.hpp"
 #include "private/signature.hpp"
+#include <type_traits>
 
 namespace gusc::Jni
 {
@@ -25,7 +26,20 @@ public:
     {
         if (cls)
         {
-            jniEnv->DeleteLocalRef(cls);
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(cls) == JNIGlobalRefType)
+            {
+                env->DeleteGlobalRef(cls);
+            }
+            else if (env->GetObjectRefType(cls) == JNIWeakGlobalRefType)
+            {
+                env->DeleteWeakGlobalRef(cls);
+            }
+            else
+            {
+                env->DeleteLocalRef(cls);
+            }
+            cls = nullptr;
         }
     }
     

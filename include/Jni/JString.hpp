@@ -2,6 +2,7 @@
 #define __GUSC_JSTRING_HPP 1
 
 #include <string>
+#include <type_traits>
 
 namespace gusc::Jni
 {
@@ -49,6 +50,8 @@ class JString final: public JObject
         const char* dataPtr { nullptr };
     };
 public:
+    using StlType = std::string;
+
     /// @brief wrap around existing JNI jstring object
     JString(JEnv env, const jstring& initString)
         : JObject(env,static_cast<jobject>(initString))
