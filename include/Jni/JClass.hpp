@@ -13,7 +13,7 @@
 namespace gusc::Jni
 {
 
-class JClass final
+class JClass
 {
 public:
     using JniType = jclass;
@@ -730,6 +730,30 @@ inline JClass JObject::getClass() const noexcept
     auto env = JVM::getEnv();
     return getClass(env);
 }
+
+/// @brief JClass with class name signature literal, use it with constexpr const char[] signature strings:
+/// @code
+///   constexpr const char java_lang_String[] = "java.lang.String";
+///   JClassS<java_lang_String> myStringClass;
+template<const char ClassName[]>
+struct JClassS : public JClass
+{
+    /// @brief create empty JNI class wrapper
+    JClassS()
+        : JClass(JVM::getEnv(), JVM::getEnv().getClass(Private::get_class_path<JClassS<ClassName>>()))
+    {}
+    /// @brief wrap around an existing JNI object
+    JClassS(JEnv env, const jclass& initClass)
+        : JClass(env, initClass)
+    {}
+    JClassS(const JClassS& other) = delete;
+    JClassS& operator=(const JClassS& other) = delete;
+
+    static constexpr const char* getClassName()
+    {
+        return ClassName;
+    }
+};
 
 }
 
