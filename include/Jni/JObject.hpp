@@ -1,8 +1,9 @@
 #ifndef __GUSC_JOBJECT_HPP
 #define __GUSC_JOBJECT_HPP 1
 
-#include "private/concat.hpp"
+#include "private/strutils.hpp"
 #include "private/signature.hpp"
+#include "private/cast.hpp"
 #include <type_traits>
 
 namespace gusc::Jni
@@ -14,63 +15,32 @@ class JString;
 class JObject
 {
 public:
+    using JniType = jobject;
+
     /// @brief create empty JNI object wrapper
     JObject() = default;
     /// @brief wrap around an existing JNI object
-    JObject(JEnv env, const jobject& initObject)
-    {
-        if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
-        {
-            jniObject = env->NewLocalRef(initObject);
-        }
-        else if (env->GetObjectRefType(initObject) == JNIWeakGlobalRefType)
-        {
-            jniObject = env->NewWeakGlobalRef(initObject);
-        }
-        else
-        {
-            jniObject = env->NewGlobalRef(initObject);
-        }
-    }
     JObject(const jobject& initObject)
-        : JObject(JVM::getEnv(), initObject)
+    {
+        copy(initObject);
+    }
+    JObject(const JEnv& /*env*/, const jobject& initObject)
+        : JObject { initObject }
     {}
     JObject(const JObject& other)
     {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(other.jniObject) == JNIGlobalRefType)
-        {
-            jniObject = env->NewLocalRef(other.jniObject);
-        }
-        else if (env->GetObjectRefType(other.jniObject) == JNIWeakGlobalRefType)
-        {
-            jniObject = env->NewWeakGlobalRef(other.jniObject);
-        }
-        else
-        {
-            jniObject = env->NewGlobalRef(other.jniObject);
-        }
+        dispose();
+        copy(other.jniObject);
     }
     JObject& operator=(const JObject& other)
     {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(other.jniObject) == JNIGlobalRefType)
-        {
-            jniObject = env->NewLocalRef(other.jniObject);
-        }
-        else if (env->GetObjectRefType(other.jniObject) == JNIWeakGlobalRefType)
-        {
-            jniObject = env->NewWeakGlobalRef(other.jniObject);
-        }
-        else
-        {
-            jniObject = env->NewGlobalRef(other.jniObject);
-        }
+        dispose();
+        copy(other.jniObject);
         return *this;
     }
     JObject(JObject&& other)
-        : jniObject(other.jniObject)
     {
+        dispose();
         std::swap(jniObject, other.jniObject);
     }
     JObject& operator=(JObject&& other)
@@ -79,7 +49,7 @@ public:
         std::swap(jniObject, other.jniObject);
         return *this;
     }
-    ~JObject()
+    virtual ~JObject()
     {
         dispose();
     }
@@ -268,25 +238,46 @@ public:
 protected:
     jobject jniObject { nullptr };
 
+    void copy(jobject initObject)
+    {
+        if (!initObject)
+        {
+            return;
+        }
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
+        {
+            jniObject = env->NewGlobalRef(initObject);
+        }
+        else if (env->GetObjectRefType(initObject) == JNIWeakGlobalRefType)
+        {
+            jniObject = env->NewWeakGlobalRef(initObject);
+        }
+        else
+        {
+            jniObject = env->NewLocalRef(initObject);
+        }
+    }
     void dispose()
     {
-        if (jniObject)
+        if (!jniObject)
         {
-            auto env = JVM::getEnv();
-            if (env->GetObjectRefType(jniObject) == JNIGlobalRefType)
-            {
-                env->DeleteGlobalRef(jniObject);
-            }
-            else if (env->GetObjectRefType(jniObject) == JNIWeakGlobalRefType)
-            {
-                env->DeleteWeakGlobalRef(jniObject);
-            }
-            else
-            {
-                env->DeleteLocalRef(jniObject);
-            }
-            jniObject = nullptr;
+            return;
         }
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(jniObject) == JNIGlobalRefType)
+        {
+            env->DeleteGlobalRef(jniObject);
+        }
+        else if (env->GetObjectRefType(jniObject) == JNIWeakGlobalRefType)
+        {
+            env->DeleteWeakGlobalRef(jniObject);
+        }
+        else
+        {
+            env->DeleteLocalRef(jniObject);
+        }
+        jniObject = nullptr;
     }
 
     inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId) const noexcept
@@ -298,7 +289,7 @@ protected:
     inline
     void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        env->CallVoidMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        env->CallVoidMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -309,7 +300,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallBooleanMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallBooleanMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -320,7 +311,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallCharMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallCharMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -331,7 +322,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallByteMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallByteMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -342,7 +333,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallShortMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallShortMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -353,7 +344,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallIntMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallIntMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -364,7 +355,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallLongMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallLongMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -375,7 +366,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallFloatMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallFloatMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -386,7 +377,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallDoubleMethod(jniObject, methodId, std::forward<const TArgs&>(args)...);
+        return env->CallDoubleMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -406,7 +397,7 @@ protected:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return static_cast<TReturn>(env->CallObjectMethod(jniObject, methodId, std::forward<const TArgs&>(args)...));
+        return static_cast<TReturn>(env->CallObjectMethod(jniObject, methodId, Private::to_jni(std::forward<const TArgs&>(args))...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -672,6 +663,63 @@ protected:
                               > value) noexcept
     {
         setFieldValue<jobject>(env, fieldId, static_cast<jobject>(value));
+    }
+};
+
+/// @brief JObject with class name signature literal, use it with constexpr const char[] signature strings:
+/// @code
+///   constexpr const char java_lang_String[] = "java.lang.String";
+///   JObjectS<java_lang_String> myString;
+template<const char ClassName[]>
+struct JObjectS : public JObject
+{
+    /// @brief create empty JNI object wrapper
+    JObjectS() = default;
+    /// @brief wrap around an existing JNI object
+    JObjectS(const jobject& initObject)
+        : JObject(initObject)
+    {}
+    JObjectS(const JEnv& /*env*/, const jobject& initObject)
+        : JObject(initObject)
+    {}
+    JObjectS(const JObjectS& other)
+        : JObject(other)
+    {}
+    JObjectS& operator=(const JObjectS& other)
+    {
+        JObject::operator=(other);
+        return *this;
+    }
+    JObjectS(JObjectS&& other)
+        : JObject(std::move(other))
+    {}
+    JObjectS& operator=(JObjectS&& other)
+    {
+        JObject::operator=(std::move(other));
+        return *this;
+    }
+    JObjectS(JObject&& other)
+        : JObject(std::move(other))
+    {}
+
+    /// @brief Create a copy of this object with reference type of global ref
+    JObjectS<ClassName> createGlobalRefS() const
+    {
+        auto env = JVM::getEnv();
+
+        return JObjectS<ClassName> { createGlobalRef() };
+    }
+
+    /// @brief Create a copy of this object with reference type of weak global ref
+    JObjectS<ClassName> createWeakGlobalRefS() const
+    {
+        auto env = JVM::getEnv();
+        return JObjectS<ClassName> { createWeakGlobalRef() };
+    }
+
+    static constexpr const char* getClassName()
+    {
+        return ClassName;
     }
 };
 

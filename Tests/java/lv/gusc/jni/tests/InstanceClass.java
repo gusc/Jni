@@ -21,6 +21,7 @@ public class InstanceClass {
     public long[] longArrayField = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     public float[] floatArrayField = {0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f};
     public double[] doubleArrayField = {0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f};
+    public TestClass testClassField = new TestClass();
 
     @Keep
     InstanceClass() {
@@ -151,6 +152,11 @@ public class InstanceClass {
     }
 
     @Keep
+    TestClass getTestClass() {
+        return testClassField;
+    }
+
+    @Keep
     void setBoolean(boolean val) {
         booleanField = val;
     }
@@ -214,20 +220,29 @@ public class InstanceClass {
     void setShortArray(short[] val) {
         shortArrayField = val;
     }
+
     @Keep
     void setIntArray(int[] val) {
         intArrayField = val;
     }
+
     @Keep
     void setLongArray(long[] val) {
         longArrayField = val;
     }
+
     @Keep
     void setFloatArray(float[] val) {
         floatArrayField = val;
     }
+
     @Keep
     void setDoubleArray(double[] val) {
         doubleArrayField = val;
+    }
+
+    @Keep
+    void setTestClass(TestClass val) {
+        testClassField = val;
     }
 }

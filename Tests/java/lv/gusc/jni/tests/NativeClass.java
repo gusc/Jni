@@ -13,6 +13,18 @@ public class NativeClass {
     }
 
     @Keep
+    InstanceClass getInstance()
+    {
+        return new InstanceClass();
+    }
+
+    @Keep
+    InstanceClass instancePassthrough(InstanceClass instance)
+    {
+        return instance;
+    }
+
+    @Keep
     boolean booleanMethod(boolean val)
     {
         return nativeBooleanMethod(val);

@@ -42,12 +42,24 @@ inline jlong fromPtr(T* ptr)
 }
 }
 
+constexpr const char lv_gusc_jni_tests_InstanceClass[] = "lv.gusc.jni.tests.InstanceClass";
+
 class NativeClassMock
 {
 public:
     NativeClassMock()
         : objRef(JVM::getEnv().getClass("lv/gusc/jni/tests/NativeClass").createObject(fromPtr(this)))
     {}
+
+    JObjectS<lv_gusc_jni_tests_InstanceClass> getInstance()
+    {
+        return objRef->invokeMethod<JObjectS<lv_gusc_jni_tests_InstanceClass>>("getInstance");
+    }
+
+    JObjectS<lv_gusc_jni_tests_InstanceClass> instancePassthrough(JObjectS<lv_gusc_jni_tests_InstanceClass> val)
+    {
+        return objRef->invokeMethod<JObjectS<lv_gusc_jni_tests_InstanceClass>>("instancePassthrough", val);
+    }
 
     void voidMethodNoArgs()
     {
