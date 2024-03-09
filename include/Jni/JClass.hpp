@@ -18,37 +18,59 @@ class JClass
 public:
     using JniType = jclass;
 
-    JClass(JEnv& initEnv, jclass initClass)
-        : jniEnv(initEnv)
-        , cls(initClass)
+    JClass(jclass initClass)
+    {
+        copy(initClass);
+    }
+    JClass(const JEnv& /*initEnv*/, jclass initClass)
+        : JClass { initClass }
     {}
-    JClass(const JClass&) = delete;
-    JClass& operator=(const JClass&) = delete;
+    JClass(const JClass& other)
+    {
+        dispose();
+        copy(other.jniClass);
+    }
+    JClass& operator=(const JClass& other)
+    {
+        dispose();
+        copy(other.jniClass);
+        return *this;
+    }
+    JClass(JClass&& other)
+    {
+        dispose();
+        std::swap(jniClass, other.jniClass);
+    }
+    JClass& operator=(JClass&& other)
+    {
+        dispose();
+        std::swap(jniClass, other.jniClass);
+        return *this;
+    }
     ~JClass()
     {
-        if (cls)
-        {
-            auto env = JVM::getEnv();
-            if (env->GetObjectRefType(cls) == JNIGlobalRefType)
-            {
-                env->DeleteGlobalRef(cls);
-            }
-            else if (env->GetObjectRefType(cls) == JNIWeakGlobalRefType)
-            {
-                env->DeleteWeakGlobalRef(cls);
-            }
-            else
-            {
-                env->DeleteLocalRef(cls);
-            }
-            cls = nullptr;
-        }
+        dispose();
+    }
+
+    /// @brief Create a copy of this object with reference type of global ref
+    JClass createGlobalRef() const
+    {
+        auto env = JVM::getEnv();
+        return JClass { static_cast<jclass>(env->NewGlobalRef(jniClass)) };
+    }
+
+    /// @brief Create a copy of this object with reference type of weak global ref
+    JClass createWeakGlobalRef() const
+    {
+        auto env = JVM::getEnv();
+        return JClass { static_cast<jclass>(env->NewWeakGlobalRef(jniClass)) };
     }
     
     inline std::string getClassPath() const noexcept
     {
+        auto env = JVM::getEnv();
         jmethodID getNameId = getMethodIdSign("getName", "()Ljava/lang/String;");
-        std::string className = JString(static_cast<jstring>(jniEnv->CallObjectMethod(cls, getNameId)));
+        std::string className = JString(static_cast<jstring>(env->CallObjectMethod(jniClass, getNameId)));
         std::size_t pos = 0;
         while ((pos = className.find('.', pos)) != std::string::npos)
         {
@@ -60,7 +82,8 @@ public:
     
     inline jmethodID getStaticMethodIdSign(const std::string& name, const std::string& signature) const
     {
-        auto methodId = jniEnv->GetStaticMethodID(cls, name.c_str(), signature.c_str());
+        auto env = JVM::getEnv();
+        auto methodId = env->GetStaticMethodID(jniClass, name.c_str(), signature.c_str());
         if (!methodId)
         {
             throw std::runtime_error(std::string("Can't find static method ") + name + " with signature " + signature);
@@ -77,7 +100,8 @@ public:
     
     inline jmethodID getMethodIdSign(const std::string& name, const std::string& signature) const
     {
-        auto methodId = jniEnv->GetMethodID(cls, name.c_str(), signature.c_str());
+        auto env = JVM::getEnv();
+        auto methodId = env->GetMethodID(jniClass, name.c_str(), signature.c_str());
         if (!methodId)
         {
             throw std::runtime_error(std::string("Can't find instance method ") + name + " with signature " + signature);
@@ -94,7 +118,8 @@ public:
 
     inline jfieldID getStaticFieldIdSign(const std::string& name, const std::string& signature) const
     {
-        auto fieldId = jniEnv->GetStaticFieldID(cls, name.c_str(), signature.c_str());
+        auto env = JVM::getEnv();
+        auto fieldId = env->GetStaticFieldID(jniClass, name.c_str(), signature.c_str());
         if (!fieldId)
         {
             throw std::runtime_error(std::string("Can't find static field ") + name + " with signature " + signature);
@@ -111,7 +136,8 @@ public:
     
     inline jfieldID getFieldIdSign(const std::string& name, const std::string& signature) const
     {
-        auto fieldId = jniEnv->GetFieldID(cls, name.c_str(), signature.c_str());
+        auto env = JVM::getEnv();
+        auto fieldId = env->GetFieldID(jniClass, name.c_str(), signature.c_str());
         if (!fieldId)
         {
             throw std::runtime_error(std::string("Can't find instance field ") + name + " with signature " + signature);
@@ -129,10 +155,11 @@ public:
     template<typename TReturn, typename... TArgs>
     inline void registerNativeMethodSign(const std::string& name, const std::string& signature, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
     {
+        auto env = JVM::getEnv();
         const JNINativeMethod methodsArray[] = {
             {name.c_str(), signature.c_str(), Private::void_cast(fn)}
         };
-        if (jniEnv->RegisterNatives(cls, methodsArray, sizeof(methodsArray) / sizeof(methodsArray[0])) < 0)
+        if (env->RegisterNatives(jniClass, methodsArray, sizeof(methodsArray) / sizeof(methodsArray[0])) < 0)
         {
             throw std::runtime_error(std::string("Failed to register native method ") + name + " with signature " + signature);
         }
@@ -148,7 +175,7 @@ public:
     template<typename... TArgs>
     JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args) const
     {
-        auto obj = env->NewObject(cls, methodId, std::forward<const TArgs&>(args)...);
+        auto obj = env->NewObject(jniClass, methodId, std::forward<const TArgs&>(args)...);
         if (!obj)
         {
             throw std::runtime_error(std::string("Failed to reate Java object "));
@@ -159,8 +186,9 @@ public:
     template<typename... TArgs>
     JObject createObjectSign(const std::string& signature, const TArgs&... args) const
     {
+        auto env = JVM::getEnv();
         const auto methodId = getMethodIdSign("<init>", signature);
-        return createObjectJni(jniEnv, methodId, std::forward<const TArgs&>(args)...);
+        return createObjectJni(env, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename... TArgs>
@@ -190,8 +218,9 @@ public:
     >
     invokeMethodSign(const std::string& name, const std::string& signature, const TArgs&... args) const
     {
+        auto env = JVM::getEnv();
         const auto methodId = getStaticMethodIdSign(name, signature);
-        invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
+        invokeMethodJni<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -227,8 +256,9 @@ public:
     >
     invokeMethodSign(const std::string& name, const std::string& signature, const TArgs&... args) const
     {
+        auto env = JVM::getEnv();
         const auto methodId = getStaticMethodIdSign(name, signature);
-        return invokeMethodJni<TReturn>(jniEnv, methodId, std::forward<const TArgs&>(args)...);
+        return invokeMethodJni<TReturn>(env, methodId, std::forward<const TArgs&>(args)...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -252,8 +282,9 @@ public:
     template<typename T>
     T getFieldSign(const std::string& name, const std::string& signature) const
     {
+        auto env = JVM::getEnv();
         const auto fieldId = getStaticFieldIdSign(name, signature);
-        return getFieldJni<T>(jniEnv, fieldId);
+        return getFieldJni<T>(env, fieldId);
     }
 
     template<typename T>
@@ -272,8 +303,9 @@ public:
     template<typename T>
     void setFieldSign(const std::string& name, const std::string& signature, const T& value)
     {
+        auto env = JVM::getEnv();
         const auto fieldId = getStaticFieldIdSign(name, signature);
-        setFieldJni<T>(jniEnv, fieldId, std::forward<const T&>(value));
+        setFieldJni<T>(env, fieldId, std::forward<const T&>(value));
     }
 
     template<typename T>
@@ -284,19 +316,59 @@ public:
     }
     
 private:
-    JEnv& jniEnv;
-    jclass cls { nullptr };
+    jclass jniClass {nullptr };
+
+    void copy(jclass initClass)
+    {
+        if (initClass)
+        {
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(initClass) == JNIGlobalRefType)
+            {
+                jniClass = static_cast<jclass>(env->NewGlobalRef(initClass));
+            }
+            else if (env->GetObjectRefType(jniClass) == JNIWeakGlobalRefType)
+            {
+                jniClass = static_cast<jclass>(env->NewWeakGlobalRef(initClass));
+            }
+            else
+            {
+                jniClass = static_cast<jclass>(env->NewLocalRef(initClass));
+            }
+        }
+    }
+
+    void dispose()
+    {
+        if (jniClass)
+        {
+            auto env = JVM::getEnv();
+            if (env->GetObjectRefType(jniClass) == JNIGlobalRefType)
+            {
+                env->DeleteGlobalRef(jniClass);
+            }
+            else if (env->GetObjectRefType(jniClass) == JNIWeakGlobalRefType)
+            {
+                env->DeleteWeakGlobalRef(jniClass);
+            }
+            else
+            {
+                env->DeleteLocalRef(jniClass);
+            }
+            jniClass = nullptr;
+        }
+    }
 
     inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId) const noexcept
     {
-        env->CallStaticVoidMethod(cls, methodId);
+        env->CallStaticVoidMethod(jniClass, methodId);
     }
 
     template<typename... TArgs>
     inline
     void invokeMethodReturnVoid(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        env->CallStaticVoidMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        env->CallStaticVoidMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -307,7 +379,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticBooleanMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticBooleanMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -318,7 +390,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticCharMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticCharMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -329,7 +401,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticByteMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticByteMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -340,7 +412,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticShortMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticShortMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -351,7 +423,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticIntMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticIntMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -362,7 +434,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticLongMethod(cls, methodId,Private::to_jni( std::forward<const TArgs&>(args))...);
+        return env->CallStaticLongMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -373,7 +445,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticFloatMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticFloatMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -384,7 +456,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return env->CallStaticDoubleMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
+        return env->CallStaticDoubleMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
     }
 
     template<typename TReturn, typename... TArgs>
@@ -404,7 +476,7 @@ private:
     >
     invokeMethodReturn(JEnv& env, jmethodID methodId, const TArgs&... args) const noexcept
     {
-        return static_cast<TReturn>(env->CallStaticObjectMethod(cls, methodId, Private::to_jni(std::forward<const TArgs&>(args))...));
+        return static_cast<TReturn>(env->CallStaticObjectMethod(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...));
     }
 
     template<typename TReturn, typename... TArgs>
@@ -437,7 +509,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticBooleanField(cls, fieldId);
+        return env->GetStaticBooleanField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -448,7 +520,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticCharField(cls, fieldId);
+        return env->GetStaticCharField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -459,7 +531,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticByteField(cls, fieldId);
+        return env->GetStaticByteField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -470,7 +542,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticShortField(cls, fieldId);
+        return env->GetStaticShortField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -481,7 +553,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticIntField(cls, fieldId);
+        return env->GetStaticIntField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -492,7 +564,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticLongField(cls, fieldId);
+        return env->GetStaticLongField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -503,7 +575,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticFloatField(cls, fieldId);
+        return env->GetStaticFloatField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -514,7 +586,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return env->GetStaticDoubleField(cls, fieldId);
+        return env->GetStaticDoubleField(jniClass, fieldId);
     }
 
     template<typename T>
@@ -534,7 +606,7 @@ private:
     >
     getFieldValue(JEnv& env, jfieldID fieldId) const noexcept
     {
-        return static_cast<T>(env->GetStaticObjectField(cls, fieldId));
+        return static_cast<T>(env->GetStaticObjectField(jniClass, fieldId));
     }
 
     template<typename T>
@@ -565,7 +637,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticBooleanField(cls, fieldId, value);
+        env->SetStaticBooleanField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -575,7 +647,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticCharField(cls, fieldId, value);
+        env->SetStaticCharField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -585,7 +657,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticByteField(cls, fieldId, value);
+        env->SetStaticByteField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -595,7 +667,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticShortField(cls, fieldId, value);
+        env->SetStaticShortField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -605,7 +677,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticIntField(cls, fieldId, value);
+        env->SetStaticIntField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -615,7 +687,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticLongField(cls, fieldId, value);
+        env->SetStaticLongField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -625,7 +697,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticFloatField(cls, fieldId, value);
+        env->SetStaticFloatField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -635,7 +707,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticDoubleField(cls, fieldId, value);
+        env->SetStaticDoubleField(jniClass, fieldId, value);
     }
 
     template<typename T>
@@ -654,7 +726,7 @@ private:
                                   const T&
                               > value) noexcept
     {
-        env->SetStaticObjectField(cls, fieldId, static_cast<jobject>(value));
+        env->SetStaticObjectField(jniClass, fieldId, static_cast<jobject>(value));
     }
 
     template<typename T>
@@ -686,7 +758,7 @@ inline JClass JEnv::getClass(const char* classPath)
     {
         throw std::runtime_error(std::string("Can't find ") + classPath + " Java class");
     }
-    return JClass(*this, cls);
+    return JClass(*this, cls).createGlobalRef();
 }
 
 inline JClass JEnv::getObjectClass(jobject jniObject)
@@ -740,7 +812,7 @@ struct JClassS : public JClass
 {
     /// @brief create empty JNI class wrapper
     JClassS()
-        : JClass(JVM::getEnv(), JVM::getEnv().getClass(Private::get_class_path<JClassS<ClassName>>()))
+        : JClass(JVM::getEnv().getClass(Private::get_class_path<JClassS<ClassName>>().str).createGlobalRef())
     {}
     /// @brief wrap around an existing JNI object
     JClassS(JEnv env, const jclass& initClass)
@@ -748,6 +820,27 @@ struct JClassS : public JClass
     {}
     JClassS(const JClassS& other) = delete;
     JClassS& operator=(const JClassS& other) = delete;
+
+    template<typename... TArgs>
+    JObjectS<ClassName> createObjectS(const TArgs&... args) const
+    {
+        return JObjectS<ClassName> { createObject(std::forward<const TArgs&>(args)...) };
+    }
+
+    /// @brief Create a copy of this object with reference type of global ref
+    JClassS<ClassName> createGlobalRefS() const
+    {
+        auto env = JVM::getEnv();
+
+        return JClassS<ClassName> { createGlobalRef() };
+    }
+
+    /// @brief Create a copy of this object with reference type of weak global ref
+    JClassS<ClassName> createWeakGlobalRefS() const
+    {
+        auto env = JVM::getEnv();
+        return JClassS<ClassName> { createWeakGlobalRef() };
+    }
 
     static constexpr const char* getClassName()
     {

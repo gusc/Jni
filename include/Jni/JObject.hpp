@@ -20,60 +20,27 @@ public:
     /// @brief create empty JNI object wrapper
     JObject() = default;
     /// @brief wrap around an existing JNI object
-    JObject(JEnv env, const jobject& initObject)
-    {
-        if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
-        {
-            jniObject = env->NewLocalRef(initObject);
-        }
-        else if (env->GetObjectRefType(initObject) == JNIWeakGlobalRefType)
-        {
-            jniObject = env->NewWeakGlobalRef(initObject);
-        }
-        else
-        {
-            jniObject = env->NewGlobalRef(initObject);
-        }
-    }
     JObject(const jobject& initObject)
-        : JObject(JVM::getEnv(), initObject)
+    {
+        copy(initObject);
+    }
+    JObject(const JEnv& /*env*/, const jobject& initObject)
+        : JObject { initObject }
     {}
     JObject(const JObject& other)
     {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(other.jniObject) == JNIGlobalRefType)
-        {
-            jniObject = env->NewLocalRef(other.jniObject);
-        }
-        else if (env->GetObjectRefType(other.jniObject) == JNIWeakGlobalRefType)
-        {
-            jniObject = env->NewWeakGlobalRef(other.jniObject);
-        }
-        else
-        {
-            jniObject = env->NewGlobalRef(other.jniObject);
-        }
+        dispose();
+        copy(other.jniObject);
     }
     JObject& operator=(const JObject& other)
     {
-        auto env = JVM::getEnv();
-        if (env->GetObjectRefType(other.jniObject) == JNIGlobalRefType)
-        {
-            jniObject = env->NewLocalRef(other.jniObject);
-        }
-        else if (env->GetObjectRefType(other.jniObject) == JNIWeakGlobalRefType)
-        {
-            jniObject = env->NewWeakGlobalRef(other.jniObject);
-        }
-        else
-        {
-            jniObject = env->NewGlobalRef(other.jniObject);
-        }
+        dispose();
+        copy(other.jniObject);
         return *this;
     }
     JObject(JObject&& other)
-        : jniObject(other.jniObject)
     {
+        dispose();
         std::swap(jniObject, other.jniObject);
     }
     JObject& operator=(JObject&& other)
@@ -271,25 +238,46 @@ public:
 protected:
     jobject jniObject { nullptr };
 
+    void copy(jobject initObject)
+    {
+        if (!initObject)
+        {
+            return;
+        }
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(initObject) == JNIGlobalRefType)
+        {
+            jniObject = env->NewGlobalRef(initObject);
+        }
+        else if (env->GetObjectRefType(initObject) == JNIWeakGlobalRefType)
+        {
+            jniObject = env->NewWeakGlobalRef(initObject);
+        }
+        else
+        {
+            jniObject = env->NewLocalRef(initObject);
+        }
+    }
     void dispose()
     {
-        if (jniObject)
+        if (!jniObject)
         {
-            auto env = JVM::getEnv();
-            if (env->GetObjectRefType(jniObject) == JNIGlobalRefType)
-            {
-                env->DeleteGlobalRef(jniObject);
-            }
-            else if (env->GetObjectRefType(jniObject) == JNIWeakGlobalRefType)
-            {
-                env->DeleteWeakGlobalRef(jniObject);
-            }
-            else
-            {
-                env->DeleteLocalRef(jniObject);
-            }
-            jniObject = nullptr;
+            return;
         }
+        auto env = JVM::getEnv();
+        if (env->GetObjectRefType(jniObject) == JNIGlobalRefType)
+        {
+            env->DeleteGlobalRef(jniObject);
+        }
+        else if (env->GetObjectRefType(jniObject) == JNIWeakGlobalRefType)
+        {
+            env->DeleteWeakGlobalRef(jniObject);
+        }
+        else
+        {
+            env->DeleteLocalRef(jniObject);
+        }
+        jniObject = nullptr;
     }
 
     inline void invokeMethodReturnVoid(JEnv& env, jmethodID methodId) const noexcept
@@ -688,11 +676,11 @@ struct JObjectS : public JObject
     /// @brief create empty JNI object wrapper
     JObjectS() = default;
     /// @brief wrap around an existing JNI object
-    JObjectS(JEnv env, const jobject& initObject)
-        : JObject(env, initObject)
-    {}
     JObjectS(const jobject& initObject)
-        : JObjectS(JVM::getEnv(), initObject)
+        : JObject(initObject)
+    {}
+    JObjectS(const JEnv& /*env*/, const jobject& initObject)
+        : JObject(initObject)
     {}
     JObjectS(const JObjectS& other)
         : JObject(other)
@@ -709,6 +697,24 @@ struct JObjectS : public JObject
     {
         JObject::operator=(std::move(other));
         return *this;
+    }
+    JObjectS(JObject&& other)
+        : JObject(std::move(other))
+    {}
+
+    /// @brief Create a copy of this object with reference type of global ref
+    JObjectS<ClassName> createGlobalRefS() const
+    {
+        auto env = JVM::getEnv();
+
+        return JObjectS<ClassName> { createGlobalRef() };
+    }
+
+    /// @brief Create a copy of this object with reference type of weak global ref
+    JObjectS<ClassName> createWeakGlobalRefS() const
+    {
+        auto env = JVM::getEnv();
+        return JObjectS<ClassName> { createWeakGlobalRef() };
     }
 
     static constexpr const char* getClassName()

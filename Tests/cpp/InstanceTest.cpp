@@ -9,6 +9,8 @@
 using namespace gusc::Jni;
 using namespace ::testing;
 
+constexpr const char lv_gusc_jni_tests_TestClass[] = "lv.gusc.jni.tests.TestClass";
+
 class InstanceTest : public Test
 {
 public:
@@ -37,7 +39,9 @@ public:
     JFloatArray p { JFloatArray::createFrom({ 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f }) };
     JDoubleArray q { JDoubleArray::createFrom({ 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0 }) };
 
-    JClass cls { JVM::getEnv().getClass("lv/gusc/jni/tests/InstanceClass") };
+    JClass cls { JVM::getEnv().getClass("lv/gusc/jni/tests/InstanceClass").createGlobalRef() };
+
+    JClassS<lv_gusc_jni_tests_TestClass> testClass;
 };
 
 TEST_F(InstanceTest, ConstructNoArgs)
@@ -218,6 +222,11 @@ TEST_F(InstanceTest, Invoke)
     EXPECT_TRUE(compare(o, o2));
     EXPECT_TRUE(compare(p, p2));
     EXPECT_TRUE(compare(q, q2));
+
+    auto test = obj.invokeMethod<JObjectS<lv_gusc_jni_tests_TestClass>>("getTestClass");
+    EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
+    auto testInstance = testClass.createObjectS().createGlobalRefS();
+    obj.invokeMethod<void>("setTestClass", testInstance);
 }
 
 TEST_F(InstanceTest, Fields)
@@ -308,4 +317,9 @@ TEST_F(InstanceTest, Fields)
     EXPECT_TRUE(compare(o, o2));
     EXPECT_TRUE(compare(p, p2));
     EXPECT_TRUE(compare(q, q2));
+
+    auto test = obj.getField<JObjectS<lv_gusc_jni_tests_TestClass>>("testClassField");
+    EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
+    auto testInstance = testClass.createObjectS().createGlobalRefS();
+    obj.setField("testClassField", testInstance);
 }

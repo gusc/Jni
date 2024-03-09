@@ -9,6 +9,8 @@
 using namespace gusc::Jni;
 using namespace ::testing;
 
+constexpr const char lv_gusc_jni_tests_TestClass[] = "lv.gusc.jni.tests.TestClass";
+
 class StaticTest : public Test
 {
 public:
@@ -36,6 +38,8 @@ public:
     JLongArray o { JLongArray::createFrom({ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 }) };
     JFloatArray p { JFloatArray::createFrom({ 9.f, 8.f, 7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f }) };
     JDoubleArray q { JDoubleArray::createFrom({ 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0 }) };
+
+    JClassS<lv_gusc_jni_tests_TestClass> testClass;
 
     // Static class has global state, so after invoke calls we need to use inverted values for field access
     jboolean aa { true };
@@ -147,6 +151,11 @@ TEST_F(StaticTest, Invoke)
     EXPECT_TRUE(compare(o, o2));
     EXPECT_TRUE(compare(p, p2));
     EXPECT_TRUE(compare(q, q2));
+
+    auto test = cls.invokeMethod<JObjectS<lv_gusc_jni_tests_TestClass>>("getTestClass");
+    EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
+    auto testInstance = testClass.createObjectS().createGlobalRefS();
+    cls.invokeMethod<void>("setTestClass", testInstance);
 }
 
 TEST_F(StaticTest, Fields)
@@ -237,4 +246,9 @@ TEST_F(StaticTest, Fields)
     EXPECT_TRUE(compare(oo, o2));
     EXPECT_TRUE(compare(pp, p2));
     EXPECT_TRUE(compare(qq, q2));
+
+    auto test = cls.getField<JObjectS<lv_gusc_jni_tests_TestClass>>("testClassField");
+    EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
+    auto testInstance = testClass.createObjectS().createGlobalRefS();
+    cls.setField("testClassField", testInstance);
 }
