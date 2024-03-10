@@ -227,6 +227,10 @@ TEST_F(InstanceTest, Invoke)
     EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
     auto testInstance = testClass.createObjectS().createGlobalRefS();
     obj.invokeMethod<void>("setTestClass", testInstance);
+
+    auto testArray = obj.invokeMethod<JObjectArray<lv_gusc_jni_tests_TestClass>>("getTestClassArray");
+    auto test2 = testArray[0];
+    EXPECT_EQ(static_cast<std::string>(test.invokeMethod<JString>("getString")), std::string{"ASDF"});
 }
 
 TEST_F(InstanceTest, Fields)

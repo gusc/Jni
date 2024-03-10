@@ -315,7 +315,7 @@ public:
         setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
     }
     
-private:
+protected:
     jclass jniClass {nullptr };
 
     void copy(jclass initClass)

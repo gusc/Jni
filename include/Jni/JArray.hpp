@@ -35,6 +35,11 @@ class JArray final : public JObject
             return dataPtr;
         }
 
+        inline const TJArrayElement& operator[](int index) const
+        {
+            return *(data() + index);
+        }
+
         ~JArrayData()
         {
             if (jniArray && dataPtr)
@@ -200,6 +205,12 @@ public:
         return static_cast<TJArray>(jniObject);
     }
 
+    inline TJArrayElement operator[](int index) const
+    {
+        JArrayData data { JVM::getEnv(), static_cast<TJArray>(jniObject) };
+        return data[index];
+    }
+
     inline JArrayData getData() const
     {
         return JArrayData(JVM::getEnv(), static_cast<TJArray>(jniObject));
@@ -357,6 +368,66 @@ public:
     static inline JArray<TCpp, TJArray, TJArrayElement> createNew(std::size_t initSize)
     {
         return createNew(JVM::getEnv(), initSize);
+    }
+
+};
+
+using JByteArray = JArray<>;
+using JCharArray = JArray<std::vector<char>, jcharArray, jchar>;
+using JShortArray = JArray<std::vector<std::int16_t>, jshortArray, jshort>;
+using JIntArray = JArray<std::vector<std::int32_t>, jintArray, jint>;
+using JLongArray = JArray<std::vector<std::int64_t>, jlongArray, jlong>;
+using JFloatArray = JArray<std::vector<float>, jfloatArray, jfloat>;
+using JDoubleArray = JArray<std::vector<double>, jdoubleArray, jdouble>;
+// Can't use std::vector<bool> as it's a bitset not an array
+using JBooleanArray = JArray<std::vector<char>, jbooleanArray, jboolean>;
+
+template<const char ClassName[]>
+class JObjectArray : public JObject
+{
+public:
+    using JniType = jobjectArray;
+
+    JObjectArray(const jobject& initArray)
+            : JObject { initArray }
+    {}
+    JObjectArray(const jobjectArray& initArray)
+        : JObject { static_cast<jobject>(initArray) }
+    {}
+    JObjectArray(JEnv /*env*/, const jobjectArray& initArray)
+        : JObjectArray { initArray }
+    {}
+
+    inline operator jobjectArray() const
+    {
+        return static_cast<jobjectArray>(jniObject);
+    }
+
+    inline JObjectS<ClassName> operator[](int index)
+    {
+        auto env = JVM::getEnv();
+        return JObjectS<ClassName>{ env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(index)) };
+    }
+
+    static inline JObjectArray<ClassName> createFrom(const std::vector<JObjectS<ClassName>>& vector)
+    {
+        auto env = JVM::getEnv();
+        JClassS<ClassName> cls;
+        auto arr = env->NewObjectArray(vector.size(), static_cast<jclass>(cls), nullptr);
+        // TODO: fill array
+        return arr;
+    }
+
+    static inline JObjectArray<ClassName> createNew(std::size_t initSize, const JObjectS<ClassName>& initObject)
+    {
+        auto env = JVM::getEnv();
+        JClassS<ClassName> cls;
+        return env->NewObjectArray(static_cast<jsize>(initSize), static_cast<jclass>(cls), static_cast<jobject>(initObject));
+    }
+
+    static constexpr const char* getElementClassName()
+    {
+        return ClassName;
     }
 
 };

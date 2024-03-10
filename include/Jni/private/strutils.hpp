@@ -57,6 +57,29 @@ constexpr auto get_class_path()
     return result;
 }
 
+template<typename T>
+constexpr auto get_element_class_path()
+{
+    constexpr auto str = T::getElementClassName();
+    constexpr std::size_t N = str_len(str);
+    char_string<N + 1> result = {};
+    result.str[N] = '\0';
+    char *dst = result.str;
+    const char *src = str;
+    for (; *src != '\0'; src++, dst++)
+    {
+        if (*src == '.')
+        {
+            *dst = '/';
+        }
+        else
+        {
+            *dst = *src;
+        }
+    }
+    return result;
+}
+
 }
 
 #endif // __GUSC_PRIVATE_STRUTILS_HPP
