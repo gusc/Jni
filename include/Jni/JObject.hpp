@@ -673,6 +673,8 @@ protected:
 template<const char ClassName[]>
 struct JObjectS : public JObject
 {
+    using JniType = jobject;
+
     /// @brief create empty JNI object wrapper
     JObjectS() = default;
     /// @brief wrap around an existing JNI object
@@ -706,7 +708,6 @@ struct JObjectS : public JObject
     JObjectS<ClassName> createGlobalRefS() const
     {
         auto env = JVM::getEnv();
-
         return JObjectS<ClassName> { createGlobalRef() };
     }
 

@@ -210,7 +210,20 @@ getJTypeSignature()
 template<typename T>
 inline constexpr
 typename std::enable_if_t<
-        !std::is_same_v<T, void> &&
+        std::is_same_v<typename T::JniType, jobjectArray>,
+        char_string<str_len(T::getElementClassName()) + 4>
+>
+getJTypeSignature()
+{
+    constexpr auto a = concat("[L");
+    constexpr auto b = get_element_class_path<T>();
+    constexpr auto c = concat(";");
+    return concat(a.str, b.str, c.str);
+}
+
+template<typename T>
+inline constexpr
+typename std::enable_if_t<
         !std::is_same_v<T, jboolean> &&
         !std::is_same_v<T, jchar> &&
         !std::is_same_v<T, jbyte> &&
@@ -229,7 +242,8 @@ typename std::enable_if_t<
         !std::is_same_v<std::decay_t<T>, std::decay_t<jlongArray>> &&
         !std::is_same_v<std::decay_t<T>, std::decay_t<jfloatArray>> &&
         !std::is_same_v<std::decay_t<T>, std::decay_t<jdoubleArray>> &&
-        !std::is_same_v<std::decay_t<T>, std::decay_t<jobjectArray>>,
+        !std::is_same_v<std::decay_t<T>, std::decay_t<jobjectArray>> &&
+        !std::is_same_v<typename T::JniType, jobjectArray>,
         char_string<str_len(T::getClassName()) + 3>
 >
 getJTypeSignature()

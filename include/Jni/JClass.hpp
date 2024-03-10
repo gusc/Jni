@@ -30,6 +30,10 @@ public:
         dispose();
         copy(other.jniClass);
     }
+    inline operator jclass()
+    {
+        return jniClass;
+    }
     JClass& operator=(const JClass& other)
     {
         dispose();
@@ -175,7 +179,7 @@ public:
     template<typename... TArgs>
     JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args) const
     {
-        auto obj = env->NewObject(jniClass, methodId, std::forward<const TArgs&>(args)...);
+        auto obj = env->NewObject(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
         if (!obj)
         {
             throw std::runtime_error(std::string("Failed to reate Java object "));
@@ -315,7 +319,7 @@ public:
         setFieldSign<T>(name, sign.str, std::forward<const T&>(value));
     }
     
-private:
+protected:
     jclass jniClass {nullptr };
 
     void copy(jclass initClass)
@@ -831,7 +835,6 @@ struct JClassS : public JClass
     JClassS<ClassName> createGlobalRefS() const
     {
         auto env = JVM::getEnv();
-
         return JClassS<ClassName> { createGlobalRef() };
     }
 

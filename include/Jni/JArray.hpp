@@ -35,6 +35,11 @@ class JArray final : public JObject
             return dataPtr;
         }
 
+        inline const TJArrayElement& operator[](int index) const
+        {
+            return *(data() + index);
+        }
+
         ~JArrayData()
         {
             if (jniArray && dataPtr)
@@ -200,6 +205,12 @@ public:
         return static_cast<TJArray>(jniObject);
     }
 
+    inline TJArrayElement operator[](int index) const
+    {
+        JArrayData data { JVM::getEnv(), static_cast<TJArray>(jniObject) };
+        return data[index];
+    }
+
     inline JArrayData getData() const
     {
         return JArrayData(JVM::getEnv(), static_cast<TJArray>(jniObject));
@@ -357,6 +368,73 @@ public:
     static inline JArray<TCpp, TJArray, TJArrayElement> createNew(std::size_t initSize)
     {
         return createNew(JVM::getEnv(), initSize);
+    }
+
+};
+
+template<const char ClassName[]>
+class JObjectArray : public JObject
+{
+public:
+    using JniType = jobjectArray;
+
+    JObjectArray(const jobject& initArray)
+        : JObject { initArray }
+    {}
+    JObjectArray(const jobjectArray& initArray)
+        : JObject { static_cast<jobject>(initArray) }
+    {}
+    JObjectArray(JEnv /*env*/, const jobjectArray& initArray)
+        : JObjectArray { initArray }
+    {}
+
+    inline operator std::vector<JObjectS<ClassName>>()
+    {
+        auto env = JVM::getEnv();
+        std::vector<JObjectS<ClassName>> vector;
+        for (int i = 0; i < env->GetArrayLength(static_cast<jarray>(jniObject)); ++i)
+        {
+            auto obj = env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(i));
+            vector.emplace_back(obj);
+        }
+        return vector;
+    }
+
+    inline operator jobjectArray() const
+    {
+        return static_cast<jobjectArray>(jniObject);
+    }
+
+    inline JObjectS<ClassName> operator[](int index)
+    {
+        auto env = JVM::getEnv();
+        return JObjectS<ClassName>{ env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(index)) };
+    }
+
+    static inline JObjectArray<ClassName> createFrom(const std::vector<JObjectS<ClassName>>& vector)
+    {
+        auto env = JVM::getEnv();
+        JClassS<ClassName> cls;
+        auto arr = env->NewObjectArray(vector.size(), static_cast<jclass>(cls), nullptr);
+        int i = 0;
+        for (const auto& o : vector)
+        {
+            env->SetObjectArrayElement(arr, static_cast<jsize>(i), static_cast<jobject>(o));
+            ++i;
+        }
+        return arr;
+    }
+
+    static inline JObjectArray<ClassName> createNew(std::size_t initSize, const JObjectS<ClassName>& initObject)
+    {
+        auto env = JVM::getEnv();
+        JClassS<ClassName> cls;
+        return env->NewObjectArray(static_cast<jsize>(initSize), static_cast<jclass>(cls), static_cast<jobject>(initObject));
+    }
+
+    static constexpr const char* getElementClassName()
+    {
+        return ClassName;
     }
 
 };
