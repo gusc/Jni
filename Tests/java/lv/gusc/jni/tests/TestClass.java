@@ -4,18 +4,23 @@ import androidx.annotation.Keep;
 import java.lang.String;
 
 public class TestClass {
+
+    private String s = "ASDF";
+
     @Keep
     public TestClass() {
     }
 
-    @Keep
-    public void callMe()
-    {
+    public TestClass(String init) {
+        s = init;
     }
 
     @Keep
-    public String getString()
-    {
-        return "ASDF";
+    public void callMe() {
+    }
+
+    @Keep
+    public String getString() {
+        return s;
     }
 }

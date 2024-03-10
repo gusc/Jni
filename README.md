@@ -9,12 +9,50 @@ The library provides:
 * Simpler method invocation with automatic signature generation for simple JNI types.
 * Simpler field getters and setters with automatic signature generation for simple JNI types.
 * Java exception marshalling.
+* A more advanced class name to signature generation using constexpr character strings as non-type template parameters
 
 Simple usage:
 
 ```c++
 JObject strObj = JVM::getEnv().getClass("java/lang/String").createObject();
 const auto strLen = strObj.invokeMethod<jlong>("length");
+```
+
+More advanced use case:
+
+```java
+package my.package;
+
+class MyClass
+{
+    private Number x = 0;
+    MyClass() {
+    }
+    MyClass(Number n) {
+        x = n;
+    }
+    Number getX() {
+        return x;
+    }
+    void setX(Number n) {
+        x = n;
+    }
+}
+```
+
+```c++
+constexpr const char java_lang_Number[] = "java.lang.Number";
+constexpr const char my_package_MyClass[] = "my.package.MyClass";
+
+JClassS<java_lang_Number> ncls;
+JObjectS<java_lang_Number> n = ncls.createObjectS();
+JString str = n.invokeMethod<JString>("toString");
+
+JClassS<my_package_MyClass> mycls;
+JObjectS<my_package_MyClass> my = mycls.createObjectS(n);
+JObjectS<java_lang_Number> n2 = my.invokeMethod<JObjectS<java_lang_Number>>("getX");
+my.invokeMethod<JObjectS<java_lang_Number>>("setX", n);
+my.invokeMethod<JObjectS<java_lang_Number>>("setX", n2);
 ```
 
 Register native method:

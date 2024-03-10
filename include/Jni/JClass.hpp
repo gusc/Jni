@@ -179,7 +179,7 @@ public:
     template<typename... TArgs>
     JObject createObjectJni(JEnv& env, jmethodID methodId, const TArgs&... args) const
     {
-        auto obj = env->NewObject(jniClass, methodId, std::forward<const TArgs&>(args)...);
+        auto obj = env->NewObject(jniClass, methodId, Private::to_jni(std::forward<const TArgs&>(args))...);
         if (!obj)
         {
             throw std::runtime_error(std::string("Failed to reate Java object "));

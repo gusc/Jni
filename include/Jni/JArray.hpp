@@ -372,16 +372,6 @@ public:
 
 };
 
-using JByteArray = JArray<>;
-using JCharArray = JArray<std::vector<char>, jcharArray, jchar>;
-using JShortArray = JArray<std::vector<std::int16_t>, jshortArray, jshort>;
-using JIntArray = JArray<std::vector<std::int32_t>, jintArray, jint>;
-using JLongArray = JArray<std::vector<std::int64_t>, jlongArray, jlong>;
-using JFloatArray = JArray<std::vector<float>, jfloatArray, jfloat>;
-using JDoubleArray = JArray<std::vector<double>, jdoubleArray, jdouble>;
-// Can't use std::vector<bool> as it's a bitset not an array
-using JBooleanArray = JArray<std::vector<char>, jbooleanArray, jboolean>;
-
 template<const char ClassName[]>
 class JObjectArray : public JObject
 {

@@ -18,6 +18,8 @@ namespace gusc::Jni
     using JFloatArray = JArray<std::vector<float>, jfloatArray, jfloat>;
     using JDoubleArray = JArray<std::vector<double>, jdoubleArray, jdouble>;
     using JBooleanArray = JArray<std::vector<char>, jbooleanArray, jboolean>;
+    template<const char ClassName[]>
+    class JObjectArray;
 }
 
 #endif //__GUSC_PRIVATE_FORWARD_HPP
