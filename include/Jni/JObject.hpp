@@ -706,7 +706,6 @@ struct JObjectS : public JObject
     JObjectS<ClassName> createGlobalRefS() const
     {
         auto env = JVM::getEnv();
-
         return JObjectS<ClassName> { createGlobalRef() };
     }
 

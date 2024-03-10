@@ -26,6 +26,9 @@ public class InstanceClass {
 
     @Keep
     InstanceClass() {
+        testClassArrayField[0] = new TestClass();
+        testClassArrayField[1] = new TestClass();
+        testClassArrayField[2] = new TestClass();
     }
 
     @Keep

@@ -389,7 +389,7 @@ public:
     using JniType = jobjectArray;
 
     JObjectArray(const jobject& initArray)
-            : JObject { initArray }
+        : JObject { initArray }
     {}
     JObjectArray(const jobjectArray& initArray)
         : JObject { static_cast<jobject>(initArray) }

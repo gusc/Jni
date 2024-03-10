@@ -831,7 +831,6 @@ struct JClassS : public JClass
     JClassS<ClassName> createGlobalRefS() const
     {
         auto env = JVM::getEnv();
-
         return JClassS<ClassName> { createGlobalRef() };
     }
 
