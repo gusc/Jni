@@ -231,6 +231,17 @@ TEST_F(InstanceTest, Invoke)
     auto testArray = obj.invokeMethod<JObjectArray<lv_gusc_jni_tests_TestClass>>("getTestClassArray");
     auto test2 = testArray[0];
     EXPECT_EQ(static_cast<std::string>(test2.invokeMethod<JString>("getString")), std::string{"ASDF"});
+
+    auto testVec = static_cast<std::vector<JObjectS<lv_gusc_jni_tests_TestClass>>>(testArray);
+    EXPECT_EQ(static_cast<jobject>(testVec[3]), nullptr);
+    testVec[3] = testClass.createObjectS();
+    EXPECT_EQ(static_cast<std::string>(testVec[3].invokeMethod<JString>("getString")), std::string{"ASDF"});
+
+    auto testArray2 = JObjectArray<lv_gusc_jni_tests_TestClass>::createFrom(testVec);
+    obj.invokeMethod<void>("setTestClassArray", testArray2);
+    auto testArray3 = obj.invokeMethod<JObjectArray<lv_gusc_jni_tests_TestClass>>("getTestClassArray");
+    auto test3 = testArray3[3];
+    EXPECT_EQ(static_cast<std::string>(test3.invokeMethod<JString>("getString")), std::string{"ASDF"});
 }
 
 TEST_F(InstanceTest, Fields)

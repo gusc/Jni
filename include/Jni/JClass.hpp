@@ -30,6 +30,10 @@ public:
         dispose();
         copy(other.jniClass);
     }
+    inline operator jclass()
+    {
+        return jniClass;
+    }
     JClass& operator=(const JClass& other)
     {
         dispose();

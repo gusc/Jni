@@ -398,6 +398,18 @@ public:
         : JObjectArray { initArray }
     {}
 
+    inline operator std::vector<JObjectS<ClassName>>()
+    {
+        auto env = JVM::getEnv();
+        std::vector<JObjectS<ClassName>> vector;
+        for (int i = 0; i < env->GetArrayLength(static_cast<jarray>(jniObject)); ++i)
+        {
+            auto obj = env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(i));
+            vector.emplace_back(obj);
+        }
+        return vector;
+    }
+
     inline operator jobjectArray() const
     {
         return static_cast<jobjectArray>(jniObject);
@@ -414,7 +426,12 @@ public:
         auto env = JVM::getEnv();
         JClassS<ClassName> cls;
         auto arr = env->NewObjectArray(vector.size(), static_cast<jclass>(cls), nullptr);
-        // TODO: fill array
+        int i = 0;
+        for (const auto& o : vector)
+        {
+            env->SetObjectArrayElement(arr, static_cast<jsize>(i), static_cast<jobject>(o));
+            ++i;
+        }
         return arr;
     }
 
