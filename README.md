@@ -112,7 +112,7 @@ The wrapper manages the wrapped jobject lifetime and deletes reference when wrap
 
 Constructors:
 
-* `JClass(JEnv&, jclass)` - the wrapper constructor
+* `JClass(const jclass&)` - the wrapper constructor
 
 Methods:
 
@@ -140,6 +140,22 @@ Internal JNI helper methods (you might not need to use them):
 * `jmethodID getFieldIdSign(const char* name, const char* signature)` - get an instance field ID from name and signature strings
 * `jmethodID getFieldId(const char* name)` - get an instance field ID from name (the signature is automatically generated at compile time from TReturn and TArgs... types)
 
+### JClassS<ClassName>
+
+Template jclass wrapepr with Java class name passed via non-type template parameter (`constexpr const char ClassName[]`). This class extends JClass so it has all the same methods as above with additional methods listed bellow.
+
+Constructors:
+
+* `JClassS()` - create new jclass wrapper
+* `JClassS(const jclass&)` - wrap around an existing JNI object
+
+Methods:
+
+* `JObjectS<ClassName> createObjectS(const TArgs&... args)`- create new object and return `JObjectS<ClassName>`
+* `JClassS<ClassName> createGlobalRefS()`- create new global reference to jclass object and wrap it in `JClassS<ClassName>`
+* `JClassS<ClassName> createWeakGlobalRefS()`- create new weak global reference to jclass object and wrap it in `JClassS<ClassName>`
+* `static constexpr const char* getClassName()`- get class name passed via non-type template parameter
+
 ### JObject
 
 Java object instance wrapper.
@@ -148,7 +164,8 @@ The wrapper manages the wrapped jobject lifetime and deletes reference when wrap
 
 Constructors:
 
-* `JObject(jobject)` - the wrapper constructor
+* `JObject()` - construct an empty JNI object
+* `JObject(const jobject&)` - the wrapper constructor
 
 Methods:
 
@@ -167,7 +184,22 @@ Internal JNI helper methods (you might not need to use them):
 * `jmethodID getFieldIdSign(const char* name, const char* signature)` - get an instance field ID from name and signature strings
 * `jmethodID getFieldId(const char* name)` - get an instance field ID from name (the signature is automatically generated at compile time from TReturn and TArgs... types)
 
-### JGlobalRef
+### JObjectS<ClassName>
+
+Template jobject wrapepr with Java class name passed via non-type template parameter (`constexpr const char ClassName[]`). This class extends JObject so it has all the same methods as above, with additional methods listed bellow.
+
+Constructors:
+
+* `JObjectS()` - create empty JNI object wrapper
+* `JObjectS(const jobject&)` - wrap around an existing JNI object
+
+Methods:
+
+* `JObjectS<ClassName> createGlobalRefS()`- create new global reference to jclass object and wrap it in `JObjectS<ClassName>`
+* `JObjectS<ClassName> createWeakGlobalRefS()`- create new weak global reference to jclass object and wrap it in `JObjectS<ClassName>`
+* `static constexpr const char* getClassName()`- get class name passed via non-type template parameter
+
+### JGlobalRef (deprecated)
 
 Global reference container - use this class to take global reference ownership of the Java object.
 
@@ -189,7 +221,7 @@ Wrapper for `jstring` object that gives RAII safe approach to convert it into `s
 
 Constructors:
 
-* `JString(JEnv, jstring)` - the wrapper constructor
+* `JString(const jstring&)` - the wrapper constructor
 
 Methods:
 
@@ -205,6 +237,7 @@ Predefined types:
 
 * `JBooleanArray` - converts `jbooleanArray` to `std::vector<bool>` and back
 * `JByteArray` - converts `jbyteArray` to `std::vector<std::int8_t>` and back
+* `JCharArray` - converts `jcharArray` to `std::vector<char>` and back
 * `JShortArray` - converts `jshortArray` to `std::vector<std::int16_t>` and back
 * `JIntArray` - converts `jintArray` to `std::vector<std::int32_t>` and back
 * `JLongArray` - converts `jlongArray` to `std::vector<std::int64_t>` and back
@@ -215,7 +248,7 @@ Methods:
 
 Constructors:
 
-* `JArray<TCpp, TJni, TJniEl>(JEnv, TJni)` - the wrapper constructor (wrap `TJni` - i.e. `j*Array` object)
+* `JArray<TCpp, TJArray, TJArrayElement>(TJArray)` - the wrapper constructor (wrap `TJArray` - i.e. `j*Array` object)
 
 Methods:
 
@@ -223,10 +256,77 @@ Methods:
 * `operator std::vector<TCpp>()` - construct new `std::vecotr<TCpp>` from `TJni`
 * `operator TJni()` - access internal `TJni` object
 
+### JObjectArray
+
+JNI object arrays are handled differently from other array types so it has it's own specialization of the array wrapper.
+
+Constructors:
+
+* `JObjectArray(const jobjectArray&)`
+
+Methods:
+
+* `operator std::vector<JObject>()` - construct new `std::vecotr<JObject>` from `jobjectArray` (wraps each element in `JObject` class)
+* `operator jobjectArray()` - access internal `jobjectArray` object
+* `JObject operator[](int index)` - access each element of the array directly
+* `static JObjectArray createFrom(const std::vector<JObject>& cppArray, const JClass& elementClass)` - create a new `jobjectArray` wrapper from `std::vector` of `JObject` elements
+* `static JObjectArray createNew(std::size_t initSize, const JObject& initObject, const JClass& elementClass)` - create a new `jobjectArray` wrapper
+
+### JObjectArrayS<ElementClassName>
+
+Template jobject wrapepr with Java class name passed via non-type template parameter (`constexpr const char ClassName[]`). This class extends JObject so it has all the same methods as above, with additional methods listed bellow.
+
+Constructors:
+
+* `JObjectArrayS(const jobjectArray&)`
+
+Methods:
+
+* `operator std::vector<JObjectS<ElementClassName>>()` - construct new `std::vecotr<JObjectS<ElementClassName>>` from `jobjectArray` (wraps each element in `JObjectS` class)
+* `JObjectS<ElementClassName> operator[](int index)` - access each element of the array directly
+* `static JObjectArrayS<ElementClassName> createFromS(const std::vector<JObjectS<ClassName>>& vector)` - create a new `jobjectArray` wrapper from `std::vector` of `JObjectS` elements
+* `static JObjectArrayS<ElementClassName> createNewS(std::size_t initSize, const JObjectS<ClassName>& initObject)` - create a new `jobjectArray` wrapper
+* `static constexpr const char* getClassName()`- get class name passed via non-type template parameter
+
 ## TODO
 
-1. Proper container (JString, JArray) tests
-2. Global references for containers (rethink the global references in general and define stricter rules)
-3. Signature generator for JObject, maybe non-type template parameters can be used to achieve the constexpr generation or be able to gracefully fall back to runtime generation when JObject is passed
-4. Also be able to forward JObject, JString etc. objects as arguments with internal cast to jobject and jstring respectively (currently all of them are just forwarded which won't work)
-5. Exception marshalling from C++ to Java
+1. Global references for arrays (maybe drop JGlobalRef)
+2. Exception marshalling from C++ to Java
+3. Introduce new abstraction with just JNI::Object which would act like a wrapper around both JObjectS and JClassS and act like dirrect mirror to Java class with option to register native methods, call static methods via `static invoke` method and instance methods via instance `invoke` method and be constructable via C++ constructor.
+
+### Idea dump
+
+```c++
+
+// it would be nice to have something like this:
+
+constexpr const char java_lang_StringBuffer[] = "java.lang.StringBuffer";
+constexpr const char java_lang_Thread[] = "java.lang.Thread";
+constexpr const char my_package_MyClass[] = "my.package.MyClass";
+
+                                                        // Java equivalents:
+// Construct new JNI object                                                         
+JNI::Object<java_lang_StringBuffer> buffer { 1024 };    // StringBuffer buffer = new StringBuffer(1024);
+
+// Invoke instance method
+auto c = buffer.invoke<char>("charAt", 123);            // char c = buffer.charAt(123);
+
+// Invoke static method
+auto currentThread = JNI::Object<java_lang_Thread>::invoke<JNI::Object<java_lang_Thread>>("currentThread"); 
+                                                        // Thread currentThread = Thread.currentThread();
+
+// Get static field and immediatelly cast it to STL type
+auto x = JNI::Object<my_package_MyClass>::getField<std::string>("staticStringField");
+// Set static field from STL/C++ type
+JNI::Object<my_package_MyClass>::setField("staticStringField", "some string");
+
+JNI::Object<my_package_MyClass> my; 
+
+// Get instance field
+auto y = my.getField<std::string>("instanceStringField");
+// Set instance field
+my.setField("instanceStringField", "my string");
+
+```
+
+
