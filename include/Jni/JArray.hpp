@@ -3,6 +3,7 @@
 
 #include <jni.h>
 #include <type_traits>
+#include <vector>
 
 namespace gusc::Jni
 {
@@ -372,20 +373,78 @@ public:
 
 };
 
-template<const char ClassName[]>
 class JObjectArray : public JObject
 {
 public:
     using JniType = jobjectArray;
 
     JObjectArray(const jobject& initArray)
-        : JObject { initArray }
+            : JObject { initArray }
     {}
     JObjectArray(const jobjectArray& initArray)
-        : JObject { static_cast<jobject>(initArray) }
+            : JObjectArray { static_cast<jobject>(initArray) }
     {}
     JObjectArray(JEnv /*env*/, const jobjectArray& initArray)
+            : JObjectArray { initArray }
+    {}
+
+    inline operator std::vector<JObject>()
+    {
+        auto env = JVM::getEnv();
+        std::vector<JObject> vector;
+        for (int i = 0; i < env->GetArrayLength(static_cast<jarray>(jniObject)); ++i)
+        {
+            auto obj = env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(i));
+            vector.emplace_back(obj);
+        }
+        return vector;
+    }
+
+    inline operator jobjectArray() const
+    {
+        return static_cast<jobjectArray>(jniObject);
+    }
+
+    inline JObject operator[](int index)
+    {
+        auto env = JVM::getEnv();
+        return JObject{ env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(index)) };
+    }
+
+    static inline JObjectArray createFrom(const std::vector<JObject>& vector, const JClass& elementClass)
+    {
+        auto env = JVM::getEnv();
+        auto arr = env->NewObjectArray(vector.size(), static_cast<jclass>(elementClass), nullptr);
+        int i = 0;
+        for (const auto& o : vector)
+        {
+            env->SetObjectArrayElement(arr, static_cast<jsize>(i), static_cast<jobject>(o));
+            ++i;
+        }
+        return arr;
+    }
+
+    static inline JObjectArray createNew(std::size_t initSize, const JObject& initObject, const JClass& elementClass)
+    {
+        auto env = JVM::getEnv();
+        return env->NewObjectArray(static_cast<jsize>(initSize), static_cast<jclass>(elementClass), static_cast<jobject>(initObject));
+    }
+
+};
+
+template<const char ClassName[]>
+class JObjectArrayS : public JObjectArray
+{
+public:
+
+    JObjectArrayS(const jobject& initArray)
         : JObjectArray { initArray }
+    {}
+    JObjectArrayS(const jobjectArray& initArray)
+        : JObjectArrayS { static_cast<jobject>(initArray) }
+    {}
+    JObjectArrayS(JEnv /*env*/, const jobjectArray& initArray)
+        : JObjectArrayS { initArray }
     {}
 
     inline operator std::vector<JObjectS<ClassName>>()
@@ -400,18 +459,13 @@ public:
         return vector;
     }
 
-    inline operator jobjectArray() const
-    {
-        return static_cast<jobjectArray>(jniObject);
-    }
-
     inline JObjectS<ClassName> operator[](int index)
     {
         auto env = JVM::getEnv();
         return JObjectS<ClassName>{ env->GetObjectArrayElement(static_cast<jobjectArray>(jniObject), static_cast<jsize>(index)) };
     }
 
-    static inline JObjectArray<ClassName> createFrom(const std::vector<JObjectS<ClassName>>& vector)
+    static inline JObjectArrayS<ClassName> createFromS(const std::vector<JObjectS<ClassName>>& vector)
     {
         auto env = JVM::getEnv();
         JClassS<ClassName> cls;
@@ -425,7 +479,7 @@ public:
         return arr;
     }
 
-    static inline JObjectArray<ClassName> createNew(std::size_t initSize, const JObjectS<ClassName>& initObject)
+    static inline JObjectArrayS<ClassName> createNewS(std::size_t initSize, const JObjectS<ClassName>& initObject)
     {
         auto env = JVM::getEnv();
         JClassS<ClassName> cls;

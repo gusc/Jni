@@ -30,7 +30,7 @@ public:
         dispose();
         copy(other.jniClass);
     }
-    inline operator jclass()
+    inline operator jclass() const
     {
         return jniClass;
     }
