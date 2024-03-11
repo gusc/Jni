@@ -14,15 +14,17 @@ class JArray final : public JObject
     class JArrayData final
     {
     public:
-        JArrayData(JEnv env, const TJArray& initArray)
+        JArrayData(const TJArray& initArray)
             : jniArray(initArray)
         {
             if (jniArray)
             {
+                auto env = JVM::getEnv();
                 length = env->GetArrayLength(jniArray);
                 dataPtr = getDataPtr(env);
             }
         }
+
         JArrayData(const JArrayData&) = delete;
         JArrayData& operator=(const JArrayData&) = delete;
 
@@ -188,16 +190,17 @@ public:
     using StlType = TCpp;
     using JniType = TJArray;
 
-    JArray(JEnv env, TJArray initArray)
-        : JObject(env, static_cast<jobject>(initArray))
+    JArray(const TJArray& initArray)
+        : JObject(static_cast<jobject>(initArray))
     {}
-    JArray(TJArray initArray)
-        : JArray(JVM::getEnv(), initArray)
+    /// @deprecated
+    JArray(const JEnv& /*env*/, const TJArray& initArray)
+        : JArray(initArray)
     {}
 
     inline operator TCpp()
     {
-        JArrayData data(JVM::getEnv(), static_cast<TJArray>(jniObject));
+        JArrayData data { static_cast<TJArray>(jniObject) };
         return static_cast<TCpp>(data);
     }
 
@@ -208,13 +211,13 @@ public:
 
     inline TJArrayElement operator[](int index) const
     {
-        JArrayData data { JVM::getEnv(), static_cast<TJArray>(jniObject) };
+        JArrayData data { static_cast<TJArray>(jniObject) };
         return data[index];
     }
 
     inline JArrayData getData() const
     {
-        return JArrayData(JVM::getEnv(), static_cast<TJArray>(jniObject));
+        return JArrayData { static_cast<TJArray>(jniObject) };
     }
 
     template<typename T=TJArray>
@@ -384,9 +387,6 @@ public:
     JObjectArray(const jobjectArray& initArray)
             : JObjectArray { static_cast<jobject>(initArray) }
     {}
-    JObjectArray(JEnv /*env*/, const jobjectArray& initArray)
-            : JObjectArray { initArray }
-    {}
 
     inline operator std::vector<JObject>()
     {
@@ -442,9 +442,6 @@ public:
     {}
     JObjectArrayS(const jobjectArray& initArray)
         : JObjectArrayS { static_cast<jobject>(initArray) }
-    {}
-    JObjectArrayS(JEnv /*env*/, const jobjectArray& initArray)
-        : JObjectArrayS { initArray }
     {}
 
     inline operator std::vector<JObjectS<ClassName>>()

@@ -8,6 +8,7 @@
 namespace gusc::Jni
 {
 
+/// @deprecated
 class JGlobalRef final
 {
 public:

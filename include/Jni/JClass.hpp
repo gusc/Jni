@@ -18,10 +18,11 @@ class JClass
 public:
     using JniType = jclass;
 
-    JClass(jclass initClass)
+    JClass(const jclass& initClass)
     {
         copy(initClass);
     }
+    /// @deprecated
     JClass(const JEnv& /*initEnv*/, jclass initClass)
         : JClass { initClass }
     {}
@@ -762,7 +763,7 @@ inline JClass JEnv::getClass(const char* classPath)
     {
         throw std::runtime_error(std::string("Can't find ") + classPath + " Java class");
     }
-    return JClass(*this, cls).createGlobalRef();
+    return JClass(cls).createGlobalRef();
 }
 
 inline JClass JEnv::getObjectClass(jobject jniObject)
@@ -814,13 +815,13 @@ inline JClass JObject::getClass() const noexcept
 template<const char ClassName[]>
 struct JClassS : public JClass
 {
-    /// @brief create empty JNI class wrapper
+    /// @brief create a new JNI class wrapper
     JClassS()
-        : JClass(JVM::getEnv().getClass(Private::get_class_path<JClassS<ClassName>>().str).createGlobalRef())
+        : JClass(JVM::getEnv().getClass(Private::get_class_path<JClassS<ClassName>>().str))
     {}
     /// @brief wrap around an existing JNI object
-    JClassS(JEnv env, const jclass& initClass)
-        : JClass(env, initClass)
+    JClassS(const jclass& initClass)
+        : JClass(initClass)
     {}
     JClassS(const JClassS& other) = delete;
     JClassS& operator=(const JClassS& other) = delete;

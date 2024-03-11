@@ -24,6 +24,7 @@ public:
     {
         copy(initObject);
     }
+    /// @deprecated
     JObject(const JEnv& /*env*/, const jobject& initObject)
         : JObject { initObject }
     {}
@@ -679,9 +680,6 @@ struct JObjectS : public JObject
     JObjectS() = default;
     /// @brief wrap around an existing JNI object
     JObjectS(const jobject& initObject)
-        : JObject(initObject)
-    {}
-    JObjectS(const JEnv& /*env*/, const jobject& initObject)
         : JObject(initObject)
     {}
     JObjectS(const JObjectS& other)

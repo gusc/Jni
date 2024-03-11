@@ -54,11 +54,12 @@ public:
     using JniType = jstring;
 
     /// @brief wrap around existing JNI jstring object
-    JString(JEnv env, const jstring& initString)
-        : JObject(env,static_cast<jobject>(initString))
-    {}
     JString(const jstring& initString)
-        : JString(JVM::getEnv(), initString)
+            : JObject(static_cast<jobject>(initString))
+    {}
+    /// @deprecated
+    JString(const JEnv& /*env*/, const jstring& initString)
+        : JString(initString)
     {}
 
     inline operator std::string() const
