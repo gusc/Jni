@@ -62,6 +62,11 @@ public:
         : JString(initString)
     {}
 
+    /// @brief create JString from std::string
+    explicit JString(const std::string& initString)
+        : JObject(static_cast<jobject>(JVM::getEnv()->NewStringUTF(initString.c_str())))
+    {}
+
     inline operator std::string() const
     {
         JStringData data(JVM::getEnv(), static_cast<jstring>(jniObject));

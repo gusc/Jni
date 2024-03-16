@@ -21,6 +21,8 @@ class Object
 public:
     using JniType = jobject;
 
+    /// @brief wrap around existing JNI object
+    explicit Object(jobject obj);
     /// @brief construct a new object
     template<typename... TArgs>
     Object(TArgs&&... args);
@@ -32,7 +34,7 @@ public:
 
     /// Get member value
     template<typename T>
-    T get(const std::string& memberName);
+    T get(const std::string& memberName) const;
 
     /// Set member value
     template<typename T>
@@ -40,21 +42,26 @@ public:
 
     /// Invoke instance method
     template<typename TReturn, typename... TArgs>
-    TReturn invoke(const std::string& methodName, TArgs&&... args);
+    TReturn invoke(const std::string& methodName, TArgs&&... args) const;
 
     /// Get static member value
     template<typename T>
-    static T getField(const std::string& memberName);
+    static T getStatic(const std::string& memberName);
 
     /// Set static member value
     template<typename T>
-    static void setField(const std::string& memberName, T&& memberValue);
+    static void setStatic(const std::string& memberName, T&& memberValue);
 
     /// Invoke static method
     template<typename TReturn, typename... TArgs>
-    static TReturn invokeMethod(const std::string& methodName, TArgs&&... args);
+    static TReturn invokeStatic(const std::string& methodName, TArgs&&... args);
 
-    static constexpr const char* getClassName()
+    inline operator jobject()
+    {
+        return instance;
+    }
+
+    inline static constexpr const char* getClassName()
     {
         return ClassName;
     }
@@ -63,11 +70,16 @@ private:
 };
 
 template<const char ClassName[]>
+Object<ClassName>::Object(jobject obj)
+    : instance { obj }
+{}
+
+template<const char ClassName[]>
 template<typename... TArgs>
 Object<ClassName>::Object(TArgs&&... args)
 {
     JClassS<ClassName> cls;
-    instance = cls.createOjbectS(std::forward<TArgs>(args)...);
+    instance = cls.createObjectS(std::forward<TArgs>(args)...);
 }
 
 template<const char ClassName[]>
@@ -100,7 +112,7 @@ Object<ClassName>::~Object()
 
 template<const char ClassName[]>
 template<typename T>
-T Object<ClassName>::get(const std::string& memberName)
+T Object<ClassName>::get(const std::string& memberName) const
 {
     return instance.template getField<T>(memberName.c_str());
 }
@@ -114,14 +126,14 @@ void Object<ClassName>::set(const std::string& memberName, T&& memberValue)
 
 template<const char ClassName[]>
 template<typename TReturn, typename... TArgs>
-TReturn Object<ClassName>::invoke(const std::string& methodName, TArgs&&... args)
+TReturn Object<ClassName>::invoke(const std::string& methodName, TArgs&&... args) const
 {
-    instance.template invokeMethod<TReturn>(methodName.c_str(), std::forward<TArgs>(args)...);
+    return instance.template invokeMethod<TReturn>(methodName.c_str(), std::forward<TArgs>(args)...);
 }
 
 template<const char ClassName[]>
 template<typename T>
-T Object<ClassName>::getField(const std::string& memberName)
+T Object<ClassName>::getStatic(const std::string& memberName)
 {
     JClassS<ClassName> cls;
     return cls.template getField<T>(memberName.c_str());
@@ -129,7 +141,7 @@ T Object<ClassName>::getField(const std::string& memberName)
 
 template<const char ClassName[]>
 template<typename T>
-void Object<ClassName>::setField(const std::string& memberName, T&& memberValue)
+void Object<ClassName>::setStatic(const std::string& memberName, T&& memberValue)
 {
     JClassS<ClassName> cls;
     cls.template setField<T>(memberName.c_str(), std::forward<T>(memberValue));
@@ -137,10 +149,10 @@ void Object<ClassName>::setField(const std::string& memberName, T&& memberValue)
 
 template<const char ClassName[]>
 template<typename TReturn, typename... TArgs>
-TReturn Object<ClassName>::invokeMethod(const std::string& methodName, TArgs&&... args)
+TReturn Object<ClassName>::invokeStatic(const std::string& methodName, TArgs&&... args)
 {
     JClassS<ClassName> cls;
-    cls.template invokeMethod<TReturn>(methodName.c_str(), std::forward<TArgs>(args)...);
+    return cls.template invokeMethod<TReturn>(methodName.c_str(), std::forward<TArgs>(args)...);
 }
 
 }

@@ -37,7 +37,7 @@ constexpr std::size_t str_len(const char* str)
 template<typename T>
 constexpr auto get_class_path()
 {
-    constexpr auto str = T::getClassName();
+    constexpr auto str = std::decay_t<T>::getClassName();
     constexpr std::size_t N = str_len(str);
     char_string<N + 1> result = {};
     result.str[N] = '\0';
@@ -60,7 +60,7 @@ constexpr auto get_class_path()
 template<typename T>
 constexpr auto get_element_class_path()
 {
-    constexpr auto str = T::getElementClassName();
+    constexpr auto str = std::decay_t<T>::getElementClassName();
     constexpr std::size_t N = str_len(str);
     char_string<N + 1> result = {};
     result.str[N] = '\0';
