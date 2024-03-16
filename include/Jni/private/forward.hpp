@@ -4,6 +4,8 @@
 namespace gusc::Jni
 {
     class JClass;
+    template<const char ClassName[]>
+    struct JClassS;
     class JObject;
     template<const char ClassName[]>
     struct JObjectS;
