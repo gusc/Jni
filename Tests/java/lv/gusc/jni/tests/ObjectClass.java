@@ -23,4 +23,31 @@ public class ObjectClass {
         stringField = string;
     }
 
+    ObjectClass() {
+    }
+
+    ObjectClass(int a, String b) {
+        intMember = a;
+        stringMember = b;
+    }
+
+    @Keep
+    public int intMember = 987;
+
+    @Keep
+    public String stringMember = "qwerty";
+
+    @Keep
+    public Integer integerMember = 987654321;
+
+    @Keep
+    Number testMethod(String string) {
+        return Integer.parseInt(string);
+    }
+
+    @Keep
+    void testMethod2(String string) {
+        stringMember = string;
+    }
+
 }
