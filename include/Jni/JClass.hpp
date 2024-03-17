@@ -467,14 +467,7 @@ protected:
     template<typename TReturn, typename... TArgs>
     inline
     typename std::enable_if_t<
-            !std::is_same_v<TReturn, jboolean> &&
-            !std::is_same_v<TReturn, jbyte> &&
-            !std::is_same_v<TReturn, jchar> &&
-            !std::is_same_v<TReturn, jshort> &&
-            !std::is_same_v<TReturn, jint> &&
-            !std::is_same_v<TReturn, jlong> &&
-            !std::is_same_v<TReturn, jfloat> &&
-            !std::is_same_v<TReturn, jdouble> &&
+            !Private::is_jni_primitive_v<TReturn> &&
             !std::is_same_v<TReturn, JString> &&
             !std::is_same_v<TReturn, JObject>,
             TReturn
@@ -597,14 +590,7 @@ protected:
     template<typename T>
     inline
     typename std::enable_if_t<
-        !std::is_same_v<T, jboolean> &&
-        !std::is_same_v<T, jbyte> &&
-        !std::is_same_v<T, jchar> &&
-        !std::is_same_v<T, jshort> &&
-        !std::is_same_v<T, jint> &&
-        !std::is_same_v<T, jlong> &&
-        !std::is_same_v<T, jfloat> &&
-        !std::is_same_v<T, jdouble> &&
+        !Private::is_jni_primitive_v<T> &&
         !std::is_same_v<T, JString> &&
         !std::is_same_v<T, JObject>,
         T
@@ -718,14 +704,7 @@ protected:
     template<typename T>
     inline void setFieldValue(JEnv& env, jfieldID fieldId,
                               typename std::enable_if_t<
-                                  !std::is_same_v<T, jboolean> &&
-                                  !std::is_same_v<T, jbyte> &&
-                                  !std::is_same_v<T, jchar> &&
-                                  !std::is_same_v<T, jshort> &&
-                                  !std::is_same_v<T, jint> &&
-                                  !std::is_same_v<T, jlong> &&
-                                  !std::is_same_v<T, jfloat> &&
-                                  !std::is_same_v<T, jdouble> &&
+                                  !Private::is_jni_primitive_v<T> &&
                                   !std::is_same_v<T, JObject> &&
                                   !std::is_same_v<T, JString>,
                                   const T&

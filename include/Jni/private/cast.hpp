@@ -12,29 +12,85 @@ inline void* void_cast(T& Value)
     return reinterpret_cast<void*>(Value);
 }
 
+template<typename T, typename = std::void_t<>>
+struct is_jni_primitive : std::false_type {};
+
+template<typename T>
+struct is_jni_primitive<T,
+    typename std::enable_if_t<
+        std::is_same_v<T, jboolean> ||
+        std::is_same_v<T, jbyte> ||
+        std::is_same_v<T, jchar> ||
+        std::is_same_v<T, jshort> ||
+        std::is_same_v<T, jint> ||
+        std::is_same_v<T, jlong> ||
+        std::is_same_v<T, jfloat> ||
+        std::is_same_v<T, jdouble>,
+        void
+    >
+> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_jni_primitive_v = is_jni_primitive<T>::value;
+
+template<typename T, typename = std::void_t<>>
+struct is_jni_array : std::false_type {};
+
+template<typename T>
+struct is_jni_array<T,
+    typename std::enable_if_t<
+        std::is_same_v<T, jbooleanArray> ||
+        std::is_same_v<T, jbyteArray> ||
+        std::is_same_v<T, jcharArray> ||
+        std::is_same_v<T, jshortArray> ||
+        std::is_same_v<T, jintArray> ||
+        std::is_same_v<T, jlongArray> ||
+        std::is_same_v<T, jfloatArray> ||
+        std::is_same_v<T, jdoubleArray> ||
+        std::is_same_v<T, jobjectArray>,
+        void
+    >
+> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_jni_array_v = is_jni_array<T>::value;
+
+template<typename T, typename = std::void_t<>>
+struct is_jni_object : std::false_type {};
+
+template<typename T>
+struct is_jni_object<T,
+    typename std::enable_if_t<
+        std::is_same_v<T, jobject> ||
+        std::is_same_v<T, jclass> ||
+        std::is_same_v<T, jstring>,
+        void
+    >
+> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_jni_object_v = is_jni_object<T>::value;
+
+template<typename T, typename = std::void_t<>>
+struct is_jni : std::false_type {};
+
+template<typename T>
+struct is_jni<T,
+    typename std::enable_if_t<
+        is_jni_primitive_v<T> ||
+        is_jni_array_v<T> ||
+        is_jni_object_v<T>,
+        void
+    >
+> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_jni_v = is_jni<T>::value;
+
 template<typename T>
 inline
 typename std::enable_if_t<
-    std::is_same_v<std::decay_t<T>, jboolean> ||
-    std::is_same_v<std::decay_t<T>, jbyte> ||
-    std::is_same_v<std::decay_t<T>, jchar> ||
-    std::is_same_v<std::decay_t<T>, jshort> ||
-    std::is_same_v<std::decay_t<T>, jint> ||
-    std::is_same_v<std::decay_t<T>, jlong> ||
-    std::is_same_v<std::decay_t<T>, jfloat> ||
-    std::is_same_v<std::decay_t<T>, jdouble> ||
-    std::is_same_v<std::decay_t<T>, jstring> ||
-    std::is_same_v<std::decay_t<T>, jbooleanArray> ||
-    std::is_same_v<std::decay_t<T>, jbyteArray> ||
-    std::is_same_v<std::decay_t<T>, jcharArray> ||
-    std::is_same_v<std::decay_t<T>, jshortArray> ||
-    std::is_same_v<std::decay_t<T>, jintArray> ||
-    std::is_same_v<std::decay_t<T>, jlongArray> ||
-    std::is_same_v<std::decay_t<T>, jfloatArray> ||
-    std::is_same_v<std::decay_t<T>, jdoubleArray> ||
-    std::is_same_v<std::decay_t<T>, jobjectArray> ||
-    std::is_same_v<std::decay_t<T>, jobject> ||
-    std::is_same_v<std::decay_t<T>, jclass>,
+    is_jni_v<std::decay_t<T>>,
     T&&
 > to_jni(T&& in)
 {
@@ -44,26 +100,7 @@ typename std::enable_if_t<
 template<typename T>
 inline
 typename std::enable_if_t<
-    std::is_same_v<typename std::decay_t<T>::JniType, jboolean> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jbyte> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jchar> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jshort> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jint> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jlong> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jfloat> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jdouble> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jstring> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jbooleanArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jbyteArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jcharArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jshortArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jintArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jlongArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jfloatArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jdoubleArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jobjectArray> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jobject> ||
-    std::is_same_v<typename std::decay_t<T>::JniType, jclass>,
+    is_jni_v<typename std::decay_t<T>::JniType>,
     typename std::decay_t<T>::JniType
 > to_jni(T&& in)
 {
