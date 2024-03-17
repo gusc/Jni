@@ -73,6 +73,15 @@ public:
         return other;
     }
 
+    /// @brief Create a copy of this object with reference type of local ref
+    JObject createLocalRef() const
+    {
+        auto env = JVM::getEnv();
+        JObject other;
+        other.jniObject = env->NewLocalRef(jniObject);
+        return other;
+    }
+
     inline operator bool() const
     {
         return jniObject != nullptr;
@@ -693,6 +702,13 @@ struct JObjectS : public JObject
     {
         auto env = JVM::getEnv();
         return JObjectS<ClassName> { createWeakGlobalRef() };
+    }
+
+    /// @brief Create a copy of this object with reference type of global ref
+    JObjectS<ClassName> createLocalRefS() const
+    {
+        auto env = JVM::getEnv();
+        return JObjectS<ClassName> { createLocalRef() };
     }
 
     static constexpr const char* getClassName()

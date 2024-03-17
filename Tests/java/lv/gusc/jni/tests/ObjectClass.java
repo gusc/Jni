@@ -4,6 +4,8 @@ import androidx.annotation.Keep;
 
 public class ObjectClass {
 
+    // Static tests
+
     @Keep
     public static int intField = 123;
 
@@ -22,6 +24,8 @@ public class ObjectClass {
     static void testMethod2Static(String string) {
         stringField = string;
     }
+
+    // Instance tests
 
     ObjectClass() {
     }
@@ -48,6 +52,26 @@ public class ObjectClass {
     @Keep
     void testMethod2(String string) {
         stringMember = string;
+    }
+
+    // Native tests
+
+    @Keep
+    native void nativeVoidMethod();
+
+    @Keep
+    void callNativeVoid()
+    {
+        nativeVoidMethod();
+    }
+
+    @Keep
+    native String nativeMethod(Integer value);
+
+    @Keep
+    int callNative(int in)
+    {
+        return Integer.parseInt(nativeMethod(in));
     }
 
 }

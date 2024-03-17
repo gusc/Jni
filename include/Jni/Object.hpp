@@ -32,6 +32,15 @@ public:
     Object& operator=(Object&& other);
     ~Object();
 
+    /// Create a global reference copy of this object
+    Object toGlobalRef();
+
+    /// Create a weak global reference copy of this object
+    Object toWeakRef();
+
+    /// Create a local reference copy of this object
+    Object toLocalRef();
+
     /// Get member value
     template<typename T>
     T get(const std::string& memberName) const;
@@ -55,6 +64,10 @@ public:
     /// Invoke static method
     template<typename TReturn, typename... TArgs>
     static TReturn invokeStatic(const std::string& methodName, TArgs&&... args);
+
+    /// Register a native method
+    template<typename TReturn, typename... TArgs>
+    static void registerNativeMethod(const std::string& name, TReturn(*fn)(JNIEnv*, jobject, TArgs...));
 
     inline operator jobject()
     {
@@ -110,6 +123,27 @@ template<const char ClassName[]>
 Object<ClassName>::~Object()
 {}
 
+/// Create a global reference copy of this object
+template<const char ClassName[]>
+Object<ClassName> Object<ClassName>::toGlobalRef()
+{
+    return Object{ static_cast<jobject>(instance.createGlobalRef()) };
+}
+
+/// Create a weak global reference copy of this object
+template<const char ClassName[]>
+Object<ClassName> Object<ClassName>::toWeakRef()
+{
+    return Object{ static_cast<jobject>(instance.createWeakGlobalRef()) };
+}
+
+/// Create a local reference copy of this object
+template<const char ClassName[]>
+Object<ClassName> Object<ClassName>::toLocalRef()
+{
+    return Object{ static_cast<jobject>(instance.createLocalRef()) };
+}
+
 template<const char ClassName[]>
 template<typename T>
 T Object<ClassName>::get(const std::string& memberName) const
@@ -153,6 +187,14 @@ TReturn Object<ClassName>::invokeStatic(const std::string& methodName, TArgs&&..
 {
     JClassS<ClassName> cls;
     return cls.template invokeMethod<TReturn>(methodName.c_str(), std::forward<TArgs>(args)...);
+}
+
+template<const char ClassName[]>
+template<typename TReturn, typename... TArgs>
+void Object<ClassName>::registerNativeMethod(const std::string& name, TReturn(*fn)(JNIEnv*, jobject, TArgs...))
+{
+    JClassS<ClassName> cls;
+    cls.registerNativeMethod(name, fn);
 }
 
 }

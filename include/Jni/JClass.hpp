@@ -70,6 +70,13 @@ public:
         auto env = JVM::getEnv();
         return JClass { static_cast<jclass>(env->NewWeakGlobalRef(jniClass)) };
     }
+
+    /// @brief Create a copy of this object with reference type of local ref
+    JClass createLocalRef() const
+    {
+        auto env = JVM::getEnv();
+        return JClass { static_cast<jclass>(env->NewLocalRef(jniClass)) };
+    }
     
     inline std::string getClassPath() const noexcept
     {
@@ -823,6 +830,13 @@ struct JClassS : public JClass
     {
         auto env = JVM::getEnv();
         return JClassS<ClassName> { createWeakGlobalRef() };
+    }
+
+    /// @brief Create a copy of this object with reference type of local ref
+    JClassS<ClassName> createLocalRefS() const
+    {
+        auto env = JVM::getEnv();
+        return JClassS<ClassName> { createLocalRef() };
     }
 
     static constexpr const char* getClassName()

@@ -14,12 +14,14 @@ if(NOT TARGET gtest)
 endif()
 
 set(SOURCES
+	"cpp/ClassNames.hpp"
 	"cpp/main.cpp"
 	"cpp/InstanceTest.cpp"
 	"cpp/NativeClassMock.hpp"
 	"cpp/NativeClassTest.cpp"
-    "cpp/ObjectTest.cpp"
-    "cpp/PrivateTest.cpp"
+	"cpp/ObjectClassMock.hpp"
+	"cpp/ObjectTest.cpp"
+	"cpp/PrivateTest.cpp"
 	"cpp/StaticTest.cpp"
 )
 

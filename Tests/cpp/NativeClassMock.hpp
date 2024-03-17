@@ -7,6 +7,7 @@
 
 #include "Jni/Jni.hpp"
 #include <gmock/gmock.h>
+#include "ClassNames.hpp"
 
 using namespace gusc::Jni;
 using namespace ::testing;
@@ -41,8 +42,6 @@ inline jlong fromPtr(T* ptr)
     return static_cast<jlong>(bit_cast<uintptr_t>(ptr));
 }
 }
-
-constexpr const char lv_gusc_jni_tests_InstanceClass[] = "lv.gusc.jni.tests.InstanceClass";
 
 class NativeClassMock
 {

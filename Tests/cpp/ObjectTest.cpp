@@ -1,27 +1,19 @@
 //
-// Created by Gusts Kaksis on 23/10/2021.
+// Created by Gusts Kaksis on 16/03/2024.
 //
 
 #include <gtest/gtest.h>
 #include <vector>
 #include "Jni/Jni.hpp"
+#include "ObjectClassMock.hpp"
+#include "ClassNames.hpp"
 
 using namespace gusc::Jni;
 using namespace ::testing;
 
-constexpr const char lv_gusc_jni_tests_ObjectClass[] = "lv.gusc.jni.tests.ObjectClass";
-constexpr const char java_lang_Number[] = "java.lang.Number";
-constexpr const char java_lang_Integer[] = "java.lang.Integer";
-
 class ObjectTest : public Test
 {
-public:
-    template<typename TJni, typename TJava>
-    bool compare(TJni& jni, TJava& java)
-    {
-        TJni java2 { java };
-        return static_cast<typename TJni::StlType>(jni) == static_cast<typename TJni::StlType>(java2);
-    }
+
 };
 
 TEST_F(ObjectTest, Static)
@@ -106,4 +98,22 @@ TEST_F(ObjectTest, Instance)
     // var val = obj2.stringMember;
     const auto stringVal2 = obj2.get<JString>("stringMember");
     EXPECT_EQ(static_cast<std::string>(stringVal2), "as");
+}
+
+TEST_F(ObjectTest, Native)
+{
+    ObjectClassMock::instance = std::make_unique<ObjectClassMock>();
+    Object<lv_gusc_jni_tests_ObjectClass>::registerNativeMethod("nativeMethod", &ObjectClassMock::nativeMethod);
+    Object<lv_gusc_jni_tests_ObjectClass>::registerNativeMethod("nativeVoidMethod", &ObjectClassMock::nativeVoidMethod);
+
+    // ObjectClass obj = new ObjectClass();
+    Object<lv_gusc_jni_tests_ObjectClass> obj;
+
+    // obj.callNativeVoid();
+    EXPECT_CALL(*ObjectClassMock::instance.get(), nativeVoidMethodMock).Times(1);
+    obj.invoke<void>("callNativeVoid");
+
+    // obj.callNative();
+    const auto res = obj.invoke<int>("callNative", 5);
+    EXPECT_EQ(res, 5);
 }
